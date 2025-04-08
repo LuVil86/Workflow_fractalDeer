@@ -24,16 +24,24 @@ source("./refineClusteringByNSD.R")
 require(fs)
 
 ### *** input parameters **** #############
+### mettre le chemin au dossier des résultats 
+resultFolder="/media/luvil/T7_ROUGE/results_grisons/"
 
-inBehaviourFile="/home/luvil/IE-OFEV/IE-OFEV SCRIPTS/Workflow_fractalDeer/PIPELINE_FRACTALDEER/OUT_20206_deerYear_2019-2020/20206_deerYear_2019-2020_stepSize_1863_autocorrelation_timeSeriesKmeans_2_classes.csv"
+#### **** ICI  copier le contenu de la colonne "fullPath" de la ligne de stepSize à analyser ***** #####
+fullPath="/home/luvil/results_grisons/OUT_20196_deerYear_2018-2019/20196_deerYear_2018-2019_stepSize_2099_autocorrelation_timeSeriesKmeans_2_classes.csv"
+
+#### *** ICI la mesure à prendre en compte : "ratio_endNSD", "ratio_meanNSD" ou "ratio_cumulativeNSD" ***** #######
+#parameter="ratio_meanNSD"
+parameter="ratio_endNSD"
+#parameter="ratio_cumulativeNSD"
+
+################################################################################################################################
+
+
+
+inBehaviourFile=paste0(resultFolder,str_split_fixed(fullPath, '/', 5)[1,5])
 dirPath=path_dir(inBehaviourFile)
 fileName=path_file(inBehaviourFile)
-parameter="ratio_endNSD"
-##########################################
-
-
-
-
 x<-getNSDValues(inBehaviourFile, display="behaviour",save.plot=FALSE , mutate.df=TRUE, show.breakpoints = T)
 
 
