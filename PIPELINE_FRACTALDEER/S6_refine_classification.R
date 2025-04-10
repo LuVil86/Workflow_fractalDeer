@@ -22,7 +22,7 @@
 source("./getNSDValues.R")
 source("./refineClusteringByNSD.R")
 require(fs)
-
+require(stringr)
 ### *** input parameters **** #############
 ### mettre le chemin au dossier des résultats 
 resultFolder="/media/luvil/T7_ROUGE/results_grisons/"
