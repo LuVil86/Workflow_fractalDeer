@@ -2,6 +2,7 @@
 getNSDValues<-function(behaviourFile=character(), display="saison", save.plot=FALSE, mutate.df=TRUE, show.breakpoints=TRUE){
 require(multidplyr)
 require(tidyverse)
+require(dplyr)
 require(lubridate)
 require(adehabitatLT)
 require(arulesViz)

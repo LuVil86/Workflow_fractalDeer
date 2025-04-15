@@ -28,7 +28,7 @@ require(stringr)
 resultFolder="/media/luvil/T7_ROUGE/results_grisons/"
 
 #### **** ICI  copier le contenu de la colonne "fullPath" de la ligne de stepSize à analyser ***** #####
-fullPath="/home/luvil/results_grisons/OUT_20196_deerYear_2018-2019/20196_deerYear_2018-2019_stepSize_2099_autocorrelation_timeSeriesKmeans_2_classes.csv"
+fullPath="/home/luvil/results_grisons/OUT_20141_deerYear_2016-2017/20141_deerYear_2016-2017_stepSize_929_autocorrelation_timeSeriesKmeans_2_classes.csv"
 
 #### *** ICI la mesure à prendre en compte : "ratio_endNSD", "ratio_meanNSD" ou "ratio_cumulativeNSD" ***** #######
 #parameter="ratio_meanNSD"
