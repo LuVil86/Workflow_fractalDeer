@@ -12,6 +12,26 @@ import sys
 import numpy as np
 
 
+def mapSexVersoix(animalID):
+  corr={"Baron":"male",
+  "Bibiche":"femelle",
+  "Biolina":"femelle",
+  "Cocotte":"femelle",
+  "Collioud":"male",
+  "Courtois":"male",
+  "Daille":"femelle",
+  "Fabiola":"femelle",
+  "Fabiolle":"femelle",
+  "Julie":"femelle",
+  "Junior":"male",
+  "Miolan":"male",
+  "Neige":"femelle",
+  "Obelix":"male",
+  "Prince":"male",
+  "Rouphie":"femelle",
+  "Tictac":"male",
+  "Titan":"male"      }
+  return corr[animalID]
 
 def mapSeasons(monthValue):
     corr={1:"Decembre-Fevrier",
@@ -75,7 +95,7 @@ def getSunPeriod(gdf_cerf:gp.GeoDataFrame, country:str):
     return periodList
 
 ### environment parameters ###
-workDir="/".join(sys.argv[0].split("/")[:-1]) ### WRITE RESULTS WHERE THE SCRIPT IS LOCATED
+workDir="/home/luvil/IE-OFEV/cerf_GE/"
 
 overwrite=True
 
@@ -83,32 +103,31 @@ overwrite=True
 
 
 
-allDat=pd.read_csv("/home/luvil/IE-OFEV/cerf_jura/loc_jura.txt", delimiter="\t", decimal=".")
+allDat=pd.read_csv(os.path.join(workDir, "all_cerfs_Versoix_valides_2021.csv"))
 
 c=1
-for animalName in set(allDat["id"]):
+for animalName in set(allDat["prenom"]):
     print(f"********** {animalName} **********")
-    tmp=allDat.loc[allDat["id"]==animalName].copy()
+    tmp=allDat.loc[allDat["prenom"]==animalName].copy()
    # tmp.dropna(axis=0, subset="acquisition_time", inplace=True)
    # tmp.dropna(axis=0, subset=["x_lv95","y_lv95"], inplace=True)
-    tmp["prenom"]=animalName
-    tmp["dateTime"]=pd.to_datetime(tmp.datime, format="%d/%m/%Y %H:%M")
+    tmp["dateTime"]=pd.to_datetime(tmp.UTC_DATE+" "+tmp.UTC_TIME, format="%Y/%m/%d %H:%M:%S")
     tmp["year"]=pd.Series(tmp.dateTime).dt.year
     tmp["mois"]=pd.Series(tmp.dateTime).dt.month_name(locale=locale.getlocale())
     tmp["heure"]=pd.Series(tmp.dateTime).dt.hour
     tmp["saison"]=tmp["dateTime"].dt.month.apply(mapSeasons)
-    #tmp["sexe"]=cerfInfo.loc[cerfInfo["animals_original_id"]==animalName].sex
-    nbYear=tmp["year"].unique().tolist()
+    tmp["sexe"]=tmp["prenom"].apply(mapSexVersoix)
+    nbYear=tmp["annee"].unique().tolist()
 
 
     subset_cerf=gp.GeoDataFrame({"prenom":tmp.prenom,
-                                "sexe":"femelle",
+                                "sexe":tmp.sexe,
                                 "annee":tmp.year,
                                 "mois":tmp.mois,
                                 "saison":tmp.saison, 
                                 "heure":tmp.heure,
                                 "dateTime":tmp.dateTime,
-                                "geometry":gp.points_from_xy(tmp["EL1"], tmp["NL1"]),
+                                 "geometry":gp.points_from_xy(tmp["LONGITUDE"], tmp["LATITUDE"]),
                                 "UTC_DATE":tmp.dateTime.dt.date,
                                 "UTC_TIME":tmp.dateTime.dt.time
                                 },
@@ -136,31 +155,28 @@ for animalName in set(allDat["id"]):
 
 
     resultPath=os.path.join(workDir, str(animalName))
+    try:
+        os.mkdir(resultPath)
+    except OSError as error:
+        print(error)
 
     for yearTest in subset_cerf["deerYear"].unique():
         subYear=subset_cerf.loc[subset_cerf["deerYear"]==yearTest].reset_index(drop=True)
         subYear.sort_values(by="dateTime", axis=0,inplace=True)
-        try:
-            os.mkdir(resultPath)
-        except OSError as error:
-            pass
         csvPath=os.path.join(resultPath,f"{str(animalName)}_{yearTest}.csv")
         if not os.path.isfile(csvPath) or overwrite:
             subYear.to_csv(os.path.join(resultPath,f"{str(animalName)}_{yearTest}.csv"), index=False)   
         else:
             print("file already exists : no overwriting")
-    try:
-        os.mkdir(resultPath)
-    except OSError as error:
-        pass
+    
     csvPath=os.path.join(resultPath,f"{animalName}_allFixes_formatted.csv")
     if not os.path.isfile(csvPath) or overwrite:
         subset_cerf.to_csv(os.path.join(resultPath,f"{animalName}_allFixes_formatted.csv"), index=False)   
-        subset_cerf.drop(["UTC_DATE", "UTC_TIME"],axis=1).to_file(os.path.join(workDir, "RED_DEER_JURA_allFixes_formatted.gpkg"), driver='GPKG', layer=str(animalName))
+        subset_cerf.drop(["UTC_DATE", "UTC_TIME"],axis=1).to_file(os.path.join(workDir,"RED_DEER_GE_allFixes_formatted.gpkg"), driver='GPKG', layer=str(animalName))
         
     else:
         print("file already exists : no overwriting")
 
 finalStat["Duration_days"]=(finalStat["endDT"]-finalStat["startDT"]).dt.days
 finalStat["is_full_year"]=finalStat["Duration_days"].apply(lambda x : "yes" if x>=364 else "no")
-finalStat.to_csv(os.path.join(workDir, "RED_DEER_JURA_fixes_counts.csv"), index=False)
+finalStat.to_csv(os.path.join(workDir,"RED_DEER_GE_fixes_counts.csv"), index=False)

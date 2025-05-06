@@ -273,7 +273,7 @@ refineClusteringByNSD<-function (behaviourFile,
   # )
   
   BIC <- mclustBIC(finDat[,chosenParameter], G=2)
-  
+  print(BIC)
   mod1 <- Mclust(finDat[,chosenParameter], x = BIC)
   
   if (save.BIC==TRUE){
@@ -302,8 +302,7 @@ refineClusteringByNSD<-function (behaviourFile,
   
   
   datCerfs<-merge(datCerfs, finDat[,c("path_no", "clustering")], by="path_no")
-  
-  datCerfs<-datCerfs%>%dplyr::select(-c("behaviour"))%>%rename("behaviour"="clustering")%>%dplyr::arrange(t)
+  datCerfs<-datCerfs%>%dplyr::select(-c("behaviour"))%>%dplyr::rename("behaviour"="clustering")%>%dplyr::arrange(t)
   
     ###### change path_no according to new clustering ######
   path_merged<-c(0)
