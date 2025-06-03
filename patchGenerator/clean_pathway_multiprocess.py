@@ -1,9 +1,10 @@
 
 import numpy as np
+import scipy.ndimage as ndi
 import rasterio as rio
 from datetime import datetime
 from rasterio.windows import Window
-from concurrent.futures import ProcessPoolExecutor,ThreadPoolExecutor, as_completed
+from concurrent.futures import ProcessPoolExecutor, as_completed
 #assert np.__version__>=1.24
 
 def clean_pathway(inputRaster,x1,x2,y1,y2,pathway, milieux, filter_size = 3) : 
@@ -26,24 +27,27 @@ def clean_pathway(inputRaster,x1,x2,y1,y2,pathway, milieux, filter_size = 3) :
             inflatedMat[mat_milieu] = milieu                                                  #in the matrix_expensa, where mat_milieu = True, replace by code milieu
 
             tmp=inflatedMat[add_mat:-add_mat,add_mat:-add_mat]
-            los = tmp==milieu
-            finMatrix[los] = milieu                                                    #in the matrice, where los = True, replace by code milieu
+            los = int(tmp==milieu)
+            los2 = ndi.binary_fill_holes(los)
+            los2 = los2[los2==1]
+            finMatrix[los2] = milieu                                                    #in the matrice, where los = True, replace by code milieu
             finMatrix[finMatrix==0] = -999
             los=None
+            los2=None
         return finMatrix.astype(np.int16)
 
 if __name__=="__main__":
     start = datetime.now()
     ######### input parameters ########
     nbProcessors=8
-    toRemove= 28
-    milieux=[19,20,21]
-    tileSize=(4000,6000)
+    toRemove= 24
+    milieux=[15,16,17]
+    tileSize=(676,742)
     filterSize=3
 
     ### input and output
-    inputRaster="/home/lucas/FractalDeer_project/forest_patches/test_clean_mainRoads_second.tif"
-    outputRaster=""
+    inputRaster="/home/luvil/test_cleanPathway_fillHoles/HabitatMap_cerf_15avril25_clip.tif"
+    outputRaster="/home/luvil/test_cleanPathway_fillHoles/results_raster.tif"
 
 
     finResults={}
@@ -64,7 +68,9 @@ if __name__=="__main__":
 
         print("number of tiles :")
         print(f"{nbSplitY} tiles per row X {nbSplitX} tiles per column")
-
+        if nbSplitY == 1 and nbSplitX ==1 :
+            print("!! ERROR only one tile would be generated with the parameters you specified : use the non-multiprocess script instead")
+            raise ValueError
 
         
         splitCoordsXStart=[ i[0] for i in np.array_split(np.arange(ncol),nbSplitX)]  ## number of splits in the x coordinates (so this is the "vertical cuts")
@@ -123,6 +129,7 @@ if __name__=="__main__":
 
     finalMat=np.vstack(tuple([i for i in tmpRow])).astype(np.int16)
     print("row stacking done")
+
     print("  ##############  ARRAY DONE  ###########")
     print (f" total elapsed time : {datetime.now()-start}")
     out_meta.update({"driver": "GTiff",
