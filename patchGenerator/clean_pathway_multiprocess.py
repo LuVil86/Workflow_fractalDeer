@@ -78,7 +78,8 @@ if __name__=="__main__":
 
 
         for k in tileIndex:        
-                poolDF[executor.submit(clean_pathway,inputRaster,splitCoordsXStart[k[1]],
+                poolDF[executor.submit(clean_pathway,inputRaster,
+                                       splitCoordsXStart[k[1]],
                                        splitCoordsXStop[k[1]],
                                        splitCoordsYStart[k[0]],
                                        splitCoordsYStop[k[0]],
