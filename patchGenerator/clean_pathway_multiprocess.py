@@ -36,6 +36,31 @@ def clean_pathway(inputRaster,x1,x2,y1,y2,pathway, milieux, filter_size = 3) :
             los2=None
         return finMatrix.astype(np.int16)
 
+
+def cleanByErosion(inputRaster,toRemove, toMerge,toAssign) :  
+    matrix=inputRaster.read(1)
+    toRemove=[*toRemove]
+    toKeep=[*toMerge]
+    toCross=[*toRemove,*toMerge]
+
+
+    maskRemove = np.array([[elem in toRemove for elem in row] for row in matrix]) 
+    
+    
+    maskBoth = np.array([[elem in toCross for elem in row] for row in matrix]) 
+    maskBoth = np.where(maskBoth==True, 1,0)
+    ### le masque de l'érosion donne les endroits où l'algorithme doit opérer (il évitera les autres)
+    ## -> on demande de faire l'érosion que sur les chemins
+    
+    #finMask = ndi.binary_erosion(maskBoth,iterations=5,mask=maskRoad, brute_force=False)
+    erosion = ndi.binary_erosion(maskBoth, iterations=5, mask=maskRemove)
+    ### le problème c'est que ça érode aussi les chemins dans les patches de forêts QUI TOUCHENT D'AUTRES CLASSES D'HABITATS QUE LES FORÊTS (car inscrits en "0" dans le maskBoth)
+    ##  -> donc il faut trouver un moyen de remplacer ces érosions par des valeurs sans pour autant le faire sur les extérieurs des patches
+    matrix[erosion] = toAssign
+
+    return matrix
+
+
 if __name__=="__main__":
     start = datetime.now()
     ######### input parameters ########

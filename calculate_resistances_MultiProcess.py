@@ -134,7 +134,7 @@ if __name__=="__main__":
 
      
 
-######### ***GATHERING PROC RESULTS **** ########
+######### ***GATHERING RESULTS **** ########
     
     
     tmpRow=[]
@@ -143,7 +143,7 @@ if __name__=="__main__":
     for i in range(len(splitCoordsYStart)):
         tmpRow.append(np.hstack(tuple([computeResistance(finResults[(i,j)], smallerExp,biggerExp) for j in range(len(splitCoordsXStart))])))
         
-        print("column stacking done")
+        print(f"column {i} stacking done")
         
     ### remove MP results #####
     finResults=None

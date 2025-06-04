@@ -36,43 +36,75 @@ def clean_pathway(inputRaster,pathway, milieux, filter_size = 3) :
         los2=None
     return finMatrix.astype(np.int16)
 
+def cleanByErosion(inputRaster,toRemove, toMerge,toAssign) :  
+    matrix=inputRaster.read(1)
+    toRemove=[*toRemove]
+    toKeep=[*toMerge]
+    toCross=[*toRemove,*toMerge]
+
+
+    maskRemove = np.array([[elem in toRemove for elem in row] for row in matrix]) 
+    
+    
+    maskBoth = np.array([[elem in toCross for elem in row] for row in matrix]) 
+    maskBoth = np.where(maskBoth==True, 1,0)
+    ### le masque de l'érosion donne les endroits où l'algorithme doit opérer (il évitera les autres)
+    ## -> on demande de faire l'érosion que sur les chemins
+    
+    #finMask = ndi.binary_erosion(maskBoth,iterations=5,mask=maskRoad, brute_force=False)
+    erosion = ndi.binary_erosion(maskBoth, iterations=5, mask=maskRemove)
+    ### le problème c'est que ça érode aussi les chemins dans les patches de forêts QUI TOUCHENT D'AUTRES CLASSES D'HABITATS QUE LES FORÊTS (car inscrits en "0" dans le maskBoth)
+    ##  -> donc il faut trouver un moyen de remplacer ces érosions par des valeurs sans pour autant le faire sur les extérieurs des patches
+    matrix[erosion] = toAssign
+
+    return matrix
 
 def clean_pathway_2(inputRaster,pathway, milieux, filter_size = 3) :  
     matrix=inputRaster.read(1)
-    toRemove=[pathway]
+    toRemove=[*pathway]
     toKeep=[*milieux]
-    toCross=[*milieux,pathway]
-    print(toRemove)
-    print(toCross)
-    mask1 = np.array([[elem in toRemove for elem in row] for row in matrix]) ## mask1 avec juste les chemins
-    mask1 = np.where(mask1==True, 1,0)
-    #tmp = ndi.binary_erosion(mask1, iterations=1) ## erosion des chemins
-    mask2 = np.array([[elem in toKeep for elem in row] for row in matrix]) ## masque avec les forêts 
-    mask2=np.where(mask2==True, 1,0)
-    finMask=ndi.binary_propagation(input=mask2, mask=mask1)
-    finMask2=ndi.binary_erosion(finMask,iterations=3,mask=mask1)
-    matrix[finMask2==1] = milieux[0] 
-    #finMask = ndi.binary_fill_holes(mask2)
-    #tmp2 = ndi.binary_closing(mask2)
-    #finMask=np.add(tmp,mask2)
+    toCross=[*milieux,*pathway]
+
+
+    maskRoad = np.array([[elem in toRemove for elem in row] for row in matrix]) ## mask1 avec juste les chemins
+    maskForest = np.array([[elem in toKeep for elem in row] for row in matrix]) ## mask1 avec juste les chemins
     
+    maskForest = np.where(maskForest==True, 1,0)
     
-    #mask1= np.where(mask1==1, True,False)
-    #print(mask1)
-   
+    maskBoth = np.array([[elem in toCross for elem in row] for row in matrix]) ## masque avec les forêts et les chemins
+    maskBoth = np.where(maskBoth==True, 1,0)
+    ### le masque de l'érosion donne les endroits où l'algorithme doit opérer (il évitera les autres)
+    ## -> on demande de faire l'érosion que sur les chemins
+    
+    #finMask = ndi.binary_erosion(maskBoth,iterations=5,mask=maskRoad, brute_force=False)
+    maskBoth2 = ndi.binary_erosion(maskBoth, iterations=5)
+    maskBoth2 = np.where(maskBoth2==True, 1,0)
+    finMask = ndi.binary_propagation(maskRoad,mask=maskBoth2)
+
+
+    ### le problème c'est que ça érode aussi les chemins dans les patches de forêts QUI TOUCHENT D'AUTRES CLASSES D'HABITATS QUE LES FORÊTS (car inscrits en "0" dans le maskBoth)
+    ##  -> donc il faut trouver un moyen de remplacer ces érosions par des valeurs sans pour autant le faire sur les extérieurs des patches
+    matrix[maskBoth2==1] = toKeep[0]
+
     return matrix
+
+
+
+
+
 
 
 if __name__=="__main__":
     start = datetime.now()
     ######### input parameters ########
-    toRemove= 24
-    milieux=[15]
+    toRemove= [3,24]
+    toMerge=[15,13,16,17]
     filterSize=3
+    toAssign=15
 
     ### input and output
-    inputRaster="/home/luvil/test_cleanPathway_fillHoles/HabitatMap_cerf_15avril25_clip.tif"
-    outputRaster="/home/luvil/test_cleanPathway_fillHoles/results_raster.tif"
+    inputRaster="/home/luvil/test_cleanPathway_fillHoles/HabitatMap_cerf_15avril25_clip_EROSION.tif"
+    outputRaster="/home/luvil/test_cleanPathway_fillHoles/HabitatMap_cerf_15avril25_clip_EROSION_PATCHES.tif"
 
 
     with rio.open(inputRaster) as inp:
@@ -82,7 +114,7 @@ if __name__=="__main__":
         inp_transform = inp.transform ### !! the "transform" data indicates coordinates of the "upper-left" corner !!
         cellSize=inp_transform[0]
 
-        result = clean_pathway_2(inp, toRemove, milieux, filterSize )
+        result = cleanByErosion(inp, toRemove, toMerge,toAssign )
 
     out_meta.update({"driver": "GTiff",
                                                 "height": result.shape[0],
