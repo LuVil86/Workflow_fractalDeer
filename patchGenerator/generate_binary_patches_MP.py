@@ -41,7 +41,7 @@ def cleanAndFilter(inputRaster,toRemove, toMerge,minPatchSize,x1,x2,y1,y2) :
 if __name__=="__main__":
     start = datetime.now()
     ######### input parameters ########
-    nbProcessors=32
+    nbProcessors=16
     toRemove= [3,24]
     toMerge=[15,13,16,17]
     minPatchSize = 12000
@@ -144,6 +144,6 @@ if __name__=="__main__":
     print("-- trying to write raster... ")
     try:
         with rio.open(outputRaster,"w",**out_meta) as dst:
-                dst.write(finalMat,1)   
+                dst.write(finalMat.astype(np.int16),1)   
     except Exception as exc:
         print("writing raster generated an exception : ", exc)

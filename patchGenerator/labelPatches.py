@@ -37,6 +37,6 @@ if __name__=="__main__":
         print("-- trying to write raster... ")
         try:
             with rio.open(outputRasterPath,"w",**out_meta) as dst:
-                    dst.write(labeled_array.astype(np.int32),1)   
+                    dst.write(labeled_array.astype(np.int16),1)   
         except Exception as exc:
             print("writing raster generated an exception : ", exc)
