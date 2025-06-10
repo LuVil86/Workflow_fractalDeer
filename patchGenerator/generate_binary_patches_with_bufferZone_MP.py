@@ -40,7 +40,7 @@ def cleanAndFilter(inputRaster,toRemove, toMerge,minPatchSize,x1,x2,y1,y2,paddin
             ### le problème c'est que ça érode aussi les chemins dans les patches de forêts QUI TOUCHENT D'AUTRES CLASSES D'HABITATS QUE LES FORÊTS (car inscrits en "0" dans le maskBoth)
             ##  -> donc il faut trouver un moyen de remplacer ces érosions par des valeurs sans pour autant le faire sur les extérieurs des patches
             labeled_array, num_features = ndi.label(erosion, structure=ndi.generate_binary_structure(2,2)) 
-            for i in range(1,num_features):
+            for i in range(1,(num_features+1)):
                 if np.sum(np.where(labeled_array==i, 1,0)) <= minPatchSize:
                     labeled_array[labeled_array==i] = 0
             
