@@ -7,76 +7,83 @@ from rasterio.windows import Window
 from concurrent.futures import ProcessPoolExecutor, as_completed
 #assert np.__version__>=1.24
 
-def clean_pathway(inputRaster,x1,x2,y1,y2,pathway, milieux, filter_size = 3) : 
-    with rio.open(inputRaster) as rasterBuffer:  
-        matrix=rasterBuffer.read(1, window=Window.from_slices((y1, y2+1), (x1, x2+1)))
-        finMatrix=np.zeros(matrix.shape) 
-        #print(f"input tile size : {finMatrix.shape[0]} rows X {finMatrix.shape[1]} columns")
-        for milieu in milieux:                       #matrix (matrix) = matrix of the habitats | pathway (integer) = code for pathway in the matrix | milieu (integer) = code for the milieu (habitat) in the matrix
-            fs = filter_size
-            add_mat = int((fs-1) / 2)                                                           #add_mat = 1 (size of the edge added arond the matrix)
-            inflatedMat = np.zeros((matrix.shape[0]+add_mat*2,matrix.shape[1]+add_mat*2))    #create empty matrix (full of 0). nb line = nb line of "matrix"+ 2. nb column = nb columns of "matrix"+ 2 (need *2 to have a  line more at left/right and up/down)
-            inflatedMat[add_mat:-add_mat,add_mat:-add_mat] = matrix                          #inlude "matrix" inside matrix_expensa. The size of the buffer around the matrix depend of "add_mat"   Example  [[0. 0. 0. 0. 0.]            
-            mat_pathway = inflatedMat == pathway                                             #extract the pathways from matrix_expensa (where matrix_expensa = pathway code => True)                          [0. 1. 1. 1. 0.]
-            mat_milieu = inflatedMat == milieu                                                #extract the milieu from matrix_expensa (where matrix_expensa = milieu code => True)                            [0. 1. 1. 1. 0.] 
-            for i in range(add_mat,inflatedMat.shape[0]-add_mat) :                           #shape[0] = row                                                                                                  [0. 1. 1. 1. 0.]
-                for j in range(add_mat,inflatedMat.shape[1]-add_mat):                        #shape[1] = column                                                                                               [0. 0. 0. 0. 0.]]
-                    aux = inflatedMat[i-add_mat:i+add_mat+1, j-add_mat:j+add_mat+1]          #define the area around the point (+1 to have a 3x3 matrix with element i,j in the center)                                                                         
-                    if mat_pathway[i,j] and milieu in aux:                                      #if pathway next to milieu
-                        mat_milieu[i,j] = True                                                       #in the milieu matrix, what was count as pathway (False) is now count as milieu (True)
-            inflatedMat[mat_milieu] = milieu                                                  #in the matrix_expensa, where mat_milieu = True, replace by code milieu
+def clean_pathway(inputRaster,toRemove, milieux,minPatchSize,nNeighbor,x1,x2,y1,y2,padding,nrow,ncol,k) : 
 
-            tmp=inflatedMat[add_mat:-add_mat,add_mat:-add_mat]
-            los = int(tmp==milieu)
-            los2 = ndi.binary_fill_holes(los)
-            los2 = los2[los2==1]
-            finMatrix[los2] = milieu                                                    #in the matrice, where los = True, replace by code milieu
-            finMatrix[finMatrix==0] = -999
-            los=None
-            los2=None
-        return finMatrix.astype(np.int16)
-
-
-def cleanByErosion(inputRaster,toRemove, toMerge,toAssign) :  
-    matrix=inputRaster.read(1)
+    nrowOrig=y2-y1
+    ncolOrig=x2-x1
     toRemove=[*toRemove]
-    toKeep=[*toMerge]
-    toCross=[*toRemove,*toMerge]
+    milieux=[*milieux]
+#  print(f"y1 = {y1}, y2 = {y2}, x1 = {x1}, x2={x2}")
+#    print(f"nrowOrig = {nrowOrig} , ncolOrig = {ncolOrig}")
+    if (x1-padding<0 or y1-padding<0 or x2+padding>ncol or y2+padding>nrow):  
+        print(f"the tile {k} is a border tile : no computation required")
+        return np.zeros((nrowOrig,ncolOrig))
+    else:
+        with rio.open(inputRaster) as rasterBuffer:  
+            add_mat = nNeighbor  
+            matrix=rasterBuffer.read(1,window=Window.from_slices((y1-padding, y2+padding), (x1-padding, x2+padding)))
+
+            inflatedZero= np.pad(np.zeros(matrix.shape) ,((nNeighbor,nNeighbor), (nNeighbor,nNeighbor)), mode="constant", constant_values=0)
+            inflatedMat = np.pad(np.zeros(matrix.shape) ,((nNeighbor,nNeighbor), (nNeighbor,nNeighbor)), mode="constant", constant_values=0)
+              
+
+            #### generate inflated matrix : split into the two elements                                           
+            inflatedMat[add_mat:-add_mat,add_mat:-add_mat] = matrix                 
+            maskRemove = np.array([[elem in toRemove for elem in row] for row in inflatedMat])                                          
+            maskMilieux = np.array([[elem in milieux for elem in row] for row in inflatedMat])  
 
 
-    maskRemove = np.array([[elem in toRemove for elem in row] for row in matrix]) 
-    
-    
-    maskBoth = np.array([[elem in toCross for elem in row] for row in matrix]) 
-    maskBoth = np.where(maskBoth==True, 1,0)
-    ### le masque de l'érosion donne les endroits où l'algorithme doit opérer (il évitera les autres)
-    ## -> on demande de faire l'érosion que sur les chemins
-    
-    #finMask = ndi.binary_erosion(maskBoth,iterations=5,mask=maskRoad, brute_force=False)
-    erosion = ndi.binary_erosion(maskBoth, iterations=5, mask=maskRemove)
-    ### le problème c'est que ça érode aussi les chemins dans les patches de forêts QUI TOUCHENT D'AUTRES CLASSES D'HABITATS QUE LES FORÊTS (car inscrits en "0" dans le maskBoth)
-    ##  -> donc il faut trouver un moyen de remplacer ces érosions par des valeurs sans pour autant le faire sur les extérieurs des patches
-    matrix[erosion] = toAssign
+            for i in range(add_mat,inflatedMat.shape[0]-add_mat) :                          
+                for j in range(add_mat,inflatedMat.shape[1]-add_mat):                       
+                           
+                    if maskRemove[i,j] and np.any(maskMilieux[i-add_mat:i+add_mat+1, j-add_mat:j+add_mat+1]):                                  
+                        inflatedZero[i,j] = 1                                              
+            maskMilieux[inflatedZero==1] = True
+            tmp=maskMilieux[add_mat:-add_mat,add_mat:-add_mat]
+            erosion = np.where(tmp, 1, 0)
+            
+            print(f"erosion shape : {erosion.shape[0]} x {erosion.shape[1]}")
+        labeled_array, num_features = ndi.label(erosion, structure=ndi.generate_binary_structure(2,2)) 
+        for i in range(1,(num_features+1)):
+            if np.sum(np.where(labeled_array==i, 1,0)) <= minPatchSize:
+                labeled_array[labeled_array==i] = 0
+        finArray = np.where(labeled_array[padding:padding+nrowOrig,padding:padding+ncolOrig] != 0, 1, 0)
+        #finArray = labeled_array[padding:padding+nrowOrig,padding:padding+ncolOrig]
+       # print(f" Nrow : {finArray.shape[0]} x Ncol : {finArray.shape[1]}")
+        return finArray.astype(np.int16)
 
-    return matrix
+        '''
+        los = int(tmp==milieu)
+        los2 = ndi.binary_fill_holes(los)
+        los2 = los2[los2==1]
+        finMatrix[los2] = milieu                                                   
+        finMatrix[finMatrix==0] = -999
+        los=None
+        los2=None
+                    '''
+        
+
 
 
 if __name__=="__main__":
     start = datetime.now()
     ######### input parameters ########
-    nbProcessors=8
-    toRemove= 24
-    milieux=[15,16,17]
-    tileSize=(676,742)
-    filterSize=3
-
+    nbProcessors=16
+    toRemove= [3,21,24]
+    milieux=[15,13,16,17]
+    minPatchSize = 400
+    tileSize=(50,50)
+    percentBuffer=100
+    nNeighbor=1
     ### input and output
     inputRaster="/home/luvil/test_cleanPathway_fillHoles/HabitatMap_cerf_15avril25_clip.tif"
-    outputRaster="/home/luvil/test_cleanPathway_fillHoles/results_raster.tif"
+    outputRaster="/home/luvil/test_cleanPathway_fillHoles/results_cleanPathway_PADDING_MP.tif"
 
 
     finResults={}
     with rio.open(inputRaster) as inp:
+        expFactor=percentBuffer/100
+        padding=int(tileSize[0]*expFactor) ### the number of cells to add on the contours
         out_meta=inp.meta
         ncol=inp.width
         nrow=inp.height
@@ -104,57 +111,61 @@ if __name__=="__main__":
         splitCoordsYStop=[ i[-1] for i in np.array_split(np.arange(nrow),nbSplitY)]
         tileIndex=[ (i,j) for i in range(len(splitCoordsYStart)) for j in range(len(splitCoordsXStart)) ]
     inp.close()
+
+
     with ProcessPoolExecutor(max_workers=nbProcessors) as executor:
         poolDF={}
-
+        
 
         for k in tileIndex:        
                 poolDF[executor.submit(clean_pathway,inputRaster,
-                                       splitCoordsXStart[k[1]],
-                                       splitCoordsXStop[k[1]],
-                                       splitCoordsYStart[k[0]],
-                                       splitCoordsYStop[k[0]],
                                        toRemove,
                                        milieux,
-                                       filterSize)]=k
-                                       
+                                       minPatchSize,
+                                       nNeighbor,
+                                       splitCoordsXStart[k[1]],
+                                       splitCoordsXStop[k[1]]+1,
+                                       splitCoordsYStart[k[0]],
+                                       splitCoordsYStop[k[0]]+1,
+                                        padding,
+                                        nrow,
+                                        ncol
+                                        ,k)]=k
+                                                
             
         for future in as_completed(poolDF):
             
             try:
                
                finResults[poolDF[future]]=future.result()
-               print(f"tile {poolDF[future]} done")
+              # print(f"tile {poolDF[future]} done")
             except Exception as exc:
                 print('%r generated an exception: %s' % (poolDF[future], exc))
 
- #   for i in range(len(splitCoordsYStart)):
- #       for j in range(len(splitCoordsXStart)):
- #           print(f"tile ({i}, {j}) : size = {finResults[(i,j)].shape[0]} rows X {finResults[(i,j)].shape[1]} columns" )
-    
+
+######### ***GATHERING RESULTS **** ########
+
     tmpRow=[]
     for i in range(len(splitCoordsYStart)):
-         #print("entering stack command..")
-        # if i == 0:
-        #    finalMat=np.hstack(tuple([finResults[(i,j)] for j in range(len(splitCoordsXStart))]))
-        #    print("first row done")
-        # else:
-        #     tmp=np.hstack(tuple([finResults[(i,j)] for j in range(len(splitCoordsXStart))]))
-        #     finalMat=np.vstack((finalMat,tmp ))
-         #     tmp=None
-        #     print(f"row {i+1} done")
         tmpRow.append(np.hstack(tuple([finResults[(i,j)] for j in range(len(splitCoordsXStart))])))
         
-        print("column stacking done")
+        print(f"column {i} stacking done")
     finResults=None
-    print(tmpRow[0].dtype)
 
-    for i in tmpRow:
-        print(f"{i.shape[0]} rows  : {i.shape[1]} columns")
+
+
+
+
+
+  #  for i in tmpRow:
+   #     print(f"{i.shape[0]} rows  : {i.shape[1]} columns")
 
     finalMat=np.vstack(tuple([i for i in tmpRow])).astype(np.int16)
     print("row stacking done")
-
+    print("  ##############  ARRAY DONE  ###########")
+    print(f" -- final array size : {finalMat.shape[0]} rows X {finalMat.shape[1]} columns")
+    print (f" total elapsed time : {datetime.now()-start}")
+    
     print("  ##############  ARRAY DONE  ###########")
     print (f" total elapsed time : {datetime.now()-start}")
     out_meta.update({"driver": "GTiff",

@@ -53,7 +53,7 @@ if __name__=="__main__":
     start = datetime.now()
     ######### input parameters ########
     nbProcessors=16
-    toRemove= [3,24]
+    toRemove= [3,21,24]
     toMerge=[15,13,16,17]
     minPatchSize = 400
     tileSize=(50,50)
@@ -61,7 +61,7 @@ if __name__=="__main__":
     
     ### input and output
     inputRaster="/home/luvil/test_cleanPathway_fillHoles/HabitatMap_cerf_15avril25_clip.tif"
-    outputRaster="/home/luvil/test_cleanPathway_fillHoles/results_clip_PADDING_MP.tif"
+    outputRaster="/home/luvil/test_cleanPathway_fillHoles/results_clip_erosion_PADDING_MP.tif"
 
 
     finResults={}
