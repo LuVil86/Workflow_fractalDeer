@@ -40,28 +40,33 @@ def cleanAndFilter(inputRaster,toRemove, toMerge,minPatchSize,x1,x2,y1,y2,paddin
             ### le problème c'est que ça érode aussi les chemins dans les patches de forêts QUI TOUCHENT D'AUTRES CLASSES D'HABITATS QUE LES FORÊTS (car inscrits en "0" dans le maskBoth)
             ##  -> donc il faut trouver un moyen de remplacer ces érosions par des valeurs sans pour autant le faire sur les extérieurs des patches
             labeled_array, num_features = ndi.label(erosion, structure=ndi.generate_binary_structure(2,2)) 
-            for i in range(1,num_features):
+            for i in range(1,(num_features+1)):
                 if np.sum(np.where(labeled_array==i, 1,0)) <= minPatchSize:
                     labeled_array[labeled_array==i] = 0
             
             finArray = np.where(labeled_array[padding:padding+nrowOrig,padding:padding+ncolOrig] != 0, 1, 0)
         # print(f" cleanAndFilter executed in {datetime.now() - start} seconds ")
-            return finArray.astype(np.int16)
+        return finArray.astype(np.int16)
 
 
 if __name__=="__main__":
     start = datetime.now()
     ######### input parameters ########
     nbProcessors=16
+    #### habitat to dissolve in the patches
     toRemove= [3,24]
-    toMerge=[15,13,16,17]
-    minPatchSize = 400
-    tileSize=(50,50)
+    #### habitat that are merged to consider a nodal zone
+    toMerge=[13,15,16,17]
+    ### minimum nodal zone size in the tile + buffer (in pixel size)
+    minPatchSize = 12000
+    ### tile size
+    tileSize=(2000,2000)
+    ### percent of tile size used to buffer (8 square )
     percentBuffer=100
     
     ### input and output
-    inputRaster="/home/luvil/test_cleanPathway_fillHoles/HabitatMap_cerf_15avril25_clip.tif"
-    outputRaster="/home/luvil/test_cleanPathway_fillHoles/results_clip_PADDING_MP.tif"
+    inputRaster="/media/loreto/Grande/ie-ofev-24-25/variables/habitat_cerf_forZN/HabitatMap_cerf_forZN_rAoi.tif"
+    outputRaster="/media/loreto/Grande/ie-ofev-24-25/variables/habitat_cerf_forZN/ZN_cerf_rAoi_BINARY_PATCHES.tif"
 
 
     finResults={}
@@ -155,7 +160,7 @@ if __name__=="__main__":
                                                 "height": finalMat.shape[0],
                                                 "width": finalMat.shape[1],
                                                 "dtype":"int16",
-                                                "nodata":-999
+                                                "nodata":-9999
                                                 })
 
     print("-- trying to write raster... ")

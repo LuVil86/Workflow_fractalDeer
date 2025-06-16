@@ -11,8 +11,8 @@ from scipy import ndimage as ndi
 if __name__=="__main__":
     print(" ********* LABEL PATCHES ********")
     ##### parameters
-    inputRasterPath="/home/luvil/test_cleanPathway_fillHoles/results_BINARY_PATCHES.tif"
-    outputRasterPath="/home/luvil/test_cleanPathway_fillHoles/results_LABELED_PATCHES.tif"
+    inputRasterPath="/media/loreto/Grande/ie-ofev-24-25/variables/habitat_cerf_forZN/ZN_cerf_rAoi_BINARY_PATCHES_trail1/ZN_cerf_rAoi_BINARY_PATCHES.tif"
+    outputRasterPath="/media/loreto/Grande/ie-ofev-24-25/variables/habitat_cerf_forZN/ZN_cerf_rAoi_BINARY_PATCHES_trail1/ZN_cerf_rAoi_LABELED_PATCHES.tif"
 
 
 
@@ -31,7 +31,7 @@ if __name__=="__main__":
                                                     "height": labeled_array.shape[0],
                                                     "width": labeled_array.shape[1],
                                                     "dtype":"int16",
-                                                    "nodata":-999
+                                                    "nodata":-9999
                                                     })
 
         print("-- trying to write raster... ")
