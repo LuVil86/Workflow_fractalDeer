@@ -21,21 +21,32 @@
 ###################################################################
 ############### * PACKAGES, FUNCTIONS AND WORKDIR * #########################
 suppressPackageStartupMessages({
+#### packages already checked in S1 and S3
 require(gridExtra)
-require(multidplyr)
-require(tidyverse)
-require(lubridate)
-require(adehabitatLT)
-require(arulesViz)
 require(gdata)
 require(ggplot2)
-require(ggtext)
-require(mclust)
-require(amt)
-require(grid)
 require(FactoMineR)
-  require(fs)
-  require(snow)
+require(fs)
+require(tidyverse)
+##########################################
+if(!require(multidplyr)) {
+  install.packages("multidplyr"); require(multidplyr)}
+if(!require(lubridate)) {
+  install.packages("lubridate"); require(lubridate)}
+if(!require(adehabitatLT)) {
+  install.packages("adehabitatLT"); require(adehabitatLT)}
+if(!require(arulesViz)) {
+  install.packages("arulesViz"); require(arulesViz)}
+if(!require(ggtext)) {
+  install.packages("ggtext"); require(ggtext)}
+if(!require(mclust)) {
+  install.packages("mclust"); require(mclust)}
+if(!require(amt)) {
+  install.packages("amt"); require(amt)}
+if(!require(grid)) {
+  install.packages("grid"); require(grid)}
+if(!require(snow)) {
+  install.packages("snow"); require(snow)}
 })
 sourceDir <- function(path, trace = TRUE, ...) {
   op <- options(); on.exit(options(op)) # to reset after each 

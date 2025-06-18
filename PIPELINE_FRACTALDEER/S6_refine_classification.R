@@ -22,17 +22,21 @@
 source("./getNSDValues.R")
 source("./refineClusteringByNSD.R")
 require(fs)
+if(!require(stringr)) {
+  install.packages("stringr"); require(stringr)}
+
 
 ### *** input parameters **** #############
 ### mettre le chemin au dossier des résultats 
 resultFolder="/media/luvil/T7_ROUGE/results_grisons/"
 
 #### **** ICI  copier le contenu de la colonne "fullPath" de la ligne de stepSize à analyser ***** #####
-fullPath="/home/luvil/results_grisons/OUT_20196_deerYear_2018-2019/20196_deerYear_2018-2019_stepSize_2099_autocorrelation_timeSeriesKmeans_2_classes.csv"
+fullPath="/home/luvil/results_grisons/OUT_20197_deerYear_2018-2019/20197_deerYear_2018-2019_stepSize_1591_autocorrelation_timeSeriesKmeans_2_classes.csv"
+
 
 #### *** ICI la mesure à prendre en compte : "ratio_endNSD", "ratio_meanNSD" ou "ratio_cumulativeNSD" ***** #######
-#parameter="ratio_meanNSD"
-parameter="ratio_endNSD"
+parameter="ratio_meanNSD"
+#parameter="ratio_endNSD"
 #parameter="ratio_cumulativeNSD"
 
 ################################################################################################################################
