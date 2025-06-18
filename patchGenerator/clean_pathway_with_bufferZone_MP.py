@@ -71,7 +71,7 @@ if __name__=="__main__":
     nbProcessors=16
     toRemove= [3,21,24]
     milieux=[15,13,16,17]
-    minPatchSize = 400
+    minPatchSize = 12000
     tileSize=(50,50)
     percentBuffer=100
     nNeighbor=1
