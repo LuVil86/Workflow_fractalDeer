@@ -52,16 +52,16 @@ def cleanAndFilter(inputRaster,toRemove, toMerge,minPatchSize,x1,x2,y1,y2,paddin
 if __name__=="__main__":
     start = datetime.now()
     ######### input parameters ########
-    nbProcessors=16
+    nbProcessors=8
     toRemove= [3,21,24]
     toMerge=[15,13,16,17]
-    minPatchSize = 400
-    tileSize=(50,50)
+    minPatchSize = 12000
+    tileSize=(2000,2000)
     percentBuffer=100
     
     ### input and output
-    inputRaster="/home/luvil/test_cleanPathway_fillHoles/HabitatMap_cerf_15avril25_clip.tif"
-    outputRaster="/home/luvil/test_cleanPathway_fillHoles/results_clip_erosion_PADDING_MP.tif"
+    inputRaster="/home/luvil/test_cleanPathway_fillHoles/HabitatMap_cerf_forZN_rAoi.tif"
+    outputRaster="/home/luvil/test_cleanPathway_fillHoles/HabitatMap_cerf_forZN_cleanPathway_BINARY_PATCHES_w_secRoad.tif"
 
 
     finResults={}

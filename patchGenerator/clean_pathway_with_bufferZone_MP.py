@@ -19,9 +19,9 @@ def clean_pathway(inputRaster,toRemove, milieux,minPatchSize,nNeighbor,x1,x2,y1,
         print(f"the tile {k} is a border tile : no computation required")
         return np.zeros((nrowOrig,ncolOrig))
     else:
-        with rio.open(inputRaster) as rasterBuffer:  
+        with rio.open(inputRaster, 'r') as rasterBuffer:  
             add_mat = nNeighbor  
-            matrix=rasterBuffer.read(1,window=Window.from_slices((y1-padding, y2+padding), (x1-padding, x2+padding)))
+            matrix=rasterBuffer.read(1,window=Window.from_slices((y1-padding, y2+padding), (x1-padding, x2+padding)),out_dtype=np.uint8)
 
             inflatedZero= np.pad(np.zeros(matrix.shape) ,((nNeighbor,nNeighbor), (nNeighbor,nNeighbor)), mode="constant", constant_values=0)
             inflatedMat = np.pad(np.zeros(matrix.shape) ,((nNeighbor,nNeighbor), (nNeighbor,nNeighbor)), mode="constant", constant_values=0)
@@ -29,8 +29,8 @@ def clean_pathway(inputRaster,toRemove, milieux,minPatchSize,nNeighbor,x1,x2,y1,
 
             #### generate inflated matrix : split into the two elements                                           
             inflatedMat[add_mat:-add_mat,add_mat:-add_mat] = matrix                 
-            maskRemove = np.array([[elem in toRemove for elem in row] for row in inflatedMat])                                          
-            maskMilieux = np.array([[elem in milieux for elem in row] for row in inflatedMat])  
+            maskRemove = np.array([[elem in toRemove for elem in row] for row in inflatedMat],dtype=np.uint8)                                          
+            maskMilieux = np.array([[elem in milieux for elem in row] for row in inflatedMat],dtype=np.uint8)  
 
 
             for i in range(add_mat,inflatedMat.shape[0]-add_mat) :                          
@@ -42,26 +42,19 @@ def clean_pathway(inputRaster,toRemove, milieux,minPatchSize,nNeighbor,x1,x2,y1,
             tmp=maskMilieux[add_mat:-add_mat,add_mat:-add_mat]
             erosion = np.where(tmp, 1, 0)
             
-            print(f"erosion shape : {erosion.shape[0]} x {erosion.shape[1]}")
         labeled_array, num_features = ndi.label(erosion, structure=ndi.generate_binary_structure(2,2)) 
-        for i in range(1,(num_features+1)):
-            if np.sum(np.where(labeled_array==i, 1,0)) <= minPatchSize:
-                labeled_array[labeled_array==i] = 0
+        for f in ndi.find_objects(labeled_array):
+           dim_f =  (f[0].stop-f[0].start)*(f[1].stop-f[1].start)
+           if dim_f<= minPatchSize:
+               labeled_array[f] = 0
+  #      for i in range(1,(num_features+1)):
+  #          if np.sum(np.where(labeled_array==i, 1,0)) <= minPatchSize:
+  #              labeled_array[labeled_array==i] = 0
         finArray = np.where(labeled_array[padding:padding+nrowOrig,padding:padding+ncolOrig] != 0, 1, 0)
         #finArray = labeled_array[padding:padding+nrowOrig,padding:padding+ncolOrig]
        # print(f" Nrow : {finArray.shape[0]} x Ncol : {finArray.shape[1]}")
-        return finArray.astype(np.int16)
+        return finArray.astype(np.uint8)
 
-        '''
-        los = int(tmp==milieu)
-        los2 = ndi.binary_fill_holes(los)
-        los2 = los2[los2==1]
-        finMatrix[los2] = milieu                                                   
-        finMatrix[finMatrix==0] = -999
-        los=None
-        los2=None
-                    '''
-        
 
 
 
@@ -71,13 +64,13 @@ if __name__=="__main__":
     nbProcessors=16
     toRemove= [3,21,24]
     milieux=[15,13,16,17]
-    minPatchSize = 400
-    tileSize=(50,50)
+    minPatchSize = 30000
+    tileSize=(2000,2000)
     percentBuffer=100
     nNeighbor=1
     ### input and output
-    inputRaster="/home/luvil/test_cleanPathway_fillHoles/HabitatMap_cerf_15avril25_clip.tif"
-    outputRaster="/home/luvil/test_cleanPathway_fillHoles/results_cleanPathway_PADDING_MP.tif"
+    inputRaster="/home/luvil/test_cleanPathway_fillHoles/HabitatMap_cerf_forZN_rAoi.tif"
+    outputRaster="/home/luvil/test_cleanPathway_fillHoles/HabitatMap_cerf_forZN_cleanPathway_BINARY_PATCHES_w_secRoad.tif"
 
 
     finResults={}
@@ -138,7 +131,7 @@ if __name__=="__main__":
             try:
                
                finResults[poolDF[future]]=future.result()
-              # print(f"tile {poolDF[future]} done")
+               print(f"tile {poolDF[future]} done")
             except Exception as exc:
                 print('%r generated an exception: %s' % (poolDF[future], exc))
 
