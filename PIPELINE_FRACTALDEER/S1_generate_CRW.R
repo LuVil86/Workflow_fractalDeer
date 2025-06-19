@@ -17,11 +17,16 @@
 ###################################################################
 #####################################
 suppressPackageStartupMessages({
-  
-require(trajr)
-require(gdata)
-require(tidyverse)
-require(fs)
+if(!require(trajr)) {
+  install.packages("trajr"); require(trajr)}
+
+if(!require(gdata)) {
+  install.packages("gdata"); require(gdata)}
+if(!require(tidyverse)) {
+  install.packages("tidyverse"); require(tidyverse)}
+if(!require(fs)) {
+  install.packages("fs"); require(fs)}
+
 })
 #############################
 
