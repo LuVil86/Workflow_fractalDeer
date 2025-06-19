@@ -46,22 +46,29 @@ def cleanAndFilter(inputRaster,toRemove, toMerge,minPatchSize,x1,x2,y1,y2,paddin
             
             finArray = np.where(labeled_array[padding:padding+nrowOrig,padding:padding+ncolOrig] != 0, 1, 0)
         # print(f" cleanAndFilter executed in {datetime.now() - start} seconds ")
-            return finArray.astype(np.int16)
+        return finArray.astype(np.int16)
 
 
 if __name__=="__main__":
     start = datetime.now()
     ######### input parameters ########
-    nbProcessors=8
-    toRemove= [3,21,24]
-    toMerge=[15,13,16,17]
+
+    nbProcessors=16
+    #### habitat to dissolve in the patches
+    toRemove= [3,24]
+    #### habitat that are merged to consider a nodal zone
+    toMerge=[13,15,16,17]
+    ### minimum nodal zone size in the tile + buffer (in pixel size)
     minPatchSize = 12000
+    ### tile size
     tileSize=(2000,2000)
+    ### percent of tile size used to buffer (8 square )
     percentBuffer=100
     
     ### input and output
-    inputRaster="/home/luvil/test_cleanPathway_fillHoles/HabitatMap_cerf_forZN_rAoi.tif"
-    outputRaster="/home/luvil/test_cleanPathway_fillHoles/HabitatMap_cerf_forZN_cleanPathway_BINARY_PATCHES_w_secRoad.tif"
+    inputRaster="/media/loreto/Grande/ie-ofev-24-25/variables/habitat_cerf_forZN/HabitatMap_cerf_forZN_rAoi.tif"
+    outputRaster="/media/loreto/Grande/ie-ofev-24-25/variables/habitat_cerf_forZN/ZN_cerf_rAoi_BINARY_PATCHES.tif"
+
 
 
     finResults={}
@@ -155,7 +162,7 @@ if __name__=="__main__":
                                                 "height": finalMat.shape[0],
                                                 "width": finalMat.shape[1],
                                                 "dtype":"int16",
-                                                "nodata":-999
+                                                "nodata":-9999
                                                 })
 
     print("-- trying to write raster... ")

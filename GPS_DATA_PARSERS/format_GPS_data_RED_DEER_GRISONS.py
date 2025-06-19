@@ -32,16 +32,17 @@ def getDeerYear(gdf_cerf,yearList:list):
   deerYearVector=pd.Series(["NA" for i in range(len(gdf_cerf))])
   yearList.append(yearList[-1]+1)
   for i in yearList:
+      """
     if pd.to_datetime(i, format="%Y").is_leap_year:
         deerYear=[pd.Timestamp(i-1,3,1),pd.Timestamp(i,2,29)+pd.Timedelta(days=1)]
     else:
-        deerYear=[pd.Timestamp(i-1,3,1),pd.Timestamp(i,2,28)+pd.Timedelta(days=1)]
-
-    #deerYear=[pd.Timestamp(i-1,6,1),pd.Timestamp(i,5,31)+pd.Timedelta(days=1)]    
-    
-    for index, row in gdf_cerf.iterrows():
-         if deerYear[0]<row.dateTime<=deerYear[1]:
-              deerYearVector.iloc[index]=f"deerYear_{i-1}-{i}"
+        #deerYear=[pd.Timestamp(i-1,3,1),pd.Timestamp(i,2,28)+pd.Timedelta(days=1)]
+"""
+      deerYear=[pd.Timestamp(i-1,6,1),pd.Timestamp(i,5,31)+pd.Timedelta(days=1)]
+      for index, row in gdf_cerf.iterrows():
+               if deerYear[0]<row.dateTime<=deerYear[1]:
+                    deerYearVector.iloc[index]=f"deerYear_{i-1}-{i}"
+      
   return deerYearVector
 
 def getSunPeriod(gdf_cerf:gp.GeoDataFrame, country:str):
@@ -75,7 +76,8 @@ def getSunPeriod(gdf_cerf:gp.GeoDataFrame, country:str):
     return periodList
 
 ### environment parameters ###
-workDir="/".join(sys.argv[0].split("/")[:-1])
+#workDir="/".join(sys.argv[0].split("/")[:-1])
+workDir="/media/loreto/Grande/ie-ofev-24-25/cerf_movement_patterns/red_deer_grisons_parsed_1/"
 
 overwrite=True
 
@@ -83,8 +85,8 @@ overwrite=True
 
 
 
-allDat=pd.read_csv("/home/luvil/IE-OFEV/grisons_data/gps_reddeer/rd_gps_ing_snp.csv", delimiter=";", decimal=".")
-cerfInfo=pd.read_csv("/home/luvil/IE-OFEV/grisons_data/gps_reddeer/template_animals_ajf_snp.csv", delimiter=";", decimal=".")
+allDat=pd.read_csv("/media/loreto/Grande/ie-ofev-24-25/grisons_data/gps_reddeer/rd_gps_ing_snp.csv", delimiter=";", decimal=".")
+cerfInfo=pd.read_csv("/media/loreto/Grande/ie-ofev-24-25/grisons_data/gps_reddeer/template_animals_ajf_snp.csv", delimiter=";", decimal=".")
 cerfInfo.replace({"sex":{"female":"femelle"}},inplace=True)
 c=1
 for animalName in set(allDat["animals_original_id"]):
@@ -154,14 +156,14 @@ for animalName in set(allDat["animals_original_id"]):
         os.mkdir(resultPath)
     except OSError as error:
         pass
-    csvPath=os.path.join(resultPath,f"{animalName}_allFixes_formatted.csv")
+    csvPath=os.path.join(resultPath,f"{animalName}_allFixes_formatted_1.csv")
     if not os.path.isfile(csvPath) or overwrite:
-        subset_cerf.to_csv(os.path.join(resultPath,f"{animalName}_allFixes_formatted.csv"), index=False)   
-        subset_cerf.drop(["UTC_DATE", "UTC_TIME"],axis=1).to_file("/home/luvil/IE-OFEV/grisons_data/RED_DEER_GRISONS_allFixes_formatted.gpkg", driver='GPKG', layer=str(animalName))
+        subset_cerf.to_csv(os.path.join(resultPath,f"{animalName}_allFixes_formatted_1.csv"), index=False)   
+        subset_cerf.drop(["UTC_DATE", "UTC_TIME"],axis=1).to_file("/media/loreto/Grande/ie-ofev-24-25/cerf_movement_patterns/RED_DEER_GRISONS_allFixes_formatted_1.gpkg", driver='GPKG', layer=str(animalName))
         
     else:
         print("file already exists : no overwriting")
 
 finalStat["Duration_days"]=(finalStat["endDT"]-finalStat["startDT"]).dt.days
 finalStat["is_full_year"]=finalStat["Duration_days"].apply(lambda x : "yes" if x>=364 else "no")
-finalStat.to_csv("/home/luvil/IE-OFEV/grisons_data/RED_DEER_GRISONS_fixes_counts.csv", index=False)
+finalStat.to_csv("media/loreto/Grande/ie-ofev-24-25/cerf_movement_patterns/RED_DEER_GRISONS_fixes_counts_1.csv", index=False)
