@@ -150,7 +150,7 @@ if __name__=="__main__":
   #  for i in tmpRow:
    #     print(f"{i.shape[0]} rows  : {i.shape[1]} columns")
 
-    finalMat=np.vstack(tuple([i for i in tmpRow])).astype(np.int16)
+    finalMat=np.vstack(tuple([i for i in tmpRow])).astype(np.uint8)
     print("row stacking done")
     print("  ##############  ARRAY DONE  ###########")
     print(f" -- final array size : {finalMat.shape[0]} rows X {finalMat.shape[1]} columns")
@@ -161,7 +161,7 @@ if __name__=="__main__":
     out_meta.update({"driver": "GTiff",
                                                 "height": finalMat.shape[0],
                                                 "width": finalMat.shape[1],
-                                                "dtype":"int16",
+                                                "dtype":"uint8",
                                                 "nodata":-9999
                                                 })
 

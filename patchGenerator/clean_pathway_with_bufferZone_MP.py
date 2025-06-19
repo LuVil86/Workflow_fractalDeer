@@ -17,7 +17,7 @@ def clean_pathway(inputRaster,toRemove, milieux,minPatchSize,nNeighbor,x1,x2,y1,
 #    print(f"nrowOrig = {nrowOrig} , ncolOrig = {ncolOrig}")
     if (x1-padding<0 or y1-padding<0 or x2+padding>ncol or y2+padding>nrow):  
         print(f"the tile {k} is a border tile : no computation required")
-        return np.zeros((nrowOrig,ncolOrig))
+        return np.zeros((nrowOrig,ncolOrig), dtype=np.uint8)
     else:
         with rio.open(inputRaster, 'r') as rasterBuffer:  
             add_mat = nNeighbor  
@@ -64,14 +64,19 @@ if __name__=="__main__":
     nbProcessors=16
     toRemove= [3,21,24]
     milieux=[15,13,16,17]
-
-    minPatchSize = 30000
-    tileSize=(2000,2000)
-
-    percentBuffer=100
+    '''
+    inputRaster="/home/luvil/test_cleanPathway_fillHoles/HabitatMap_cerf_15avril25_clip.tif"
+    minPatchSize = 100
+    tileSize=(100,100)
+    '''
+    percentBuffer=200
     nNeighbor=1
     ### input and output
+    
     inputRaster="/home/luvil/test_cleanPathway_fillHoles/HabitatMap_cerf_forZN_rAoi.tif"
+    minPatchSize = 16000
+    tileSize=(1000,1000)
+    
     outputRaster="/home/luvil/test_cleanPathway_fillHoles/HabitatMap_cerf_forZN_cleanPathway_BINARY_PATCHES_w_secRoad.tif"
 
 
@@ -142,7 +147,7 @@ if __name__=="__main__":
 
     tmpRow=[]
     for i in range(len(splitCoordsYStart)):
-        tmpRow.append(np.hstack(tuple([finResults[(i,j)] for j in range(len(splitCoordsXStart))])))
+        tmpRow.append(np.hstack(tuple([finResults[(i,j)] for j in range(len(splitCoordsXStart))]),dtype=np.uint8))
         
         print(f"column {i} stacking done")
     finResults=None
@@ -155,7 +160,7 @@ if __name__=="__main__":
   #  for i in tmpRow:
    #     print(f"{i.shape[0]} rows  : {i.shape[1]} columns")
 
-    finalMat=np.vstack(tuple([i for i in tmpRow])).astype(np.int16)
+    finalMat=np.vstack(tuple([i for i in tmpRow])).astype(np.uint8)
     print("row stacking done")
     print("  ##############  ARRAY DONE  ###########")
     print(f" -- final array size : {finalMat.shape[0]} rows X {finalMat.shape[1]} columns")
@@ -166,8 +171,8 @@ if __name__=="__main__":
     out_meta.update({"driver": "GTiff",
                                                 "height": finalMat.shape[0],
                                                 "width": finalMat.shape[1],
-                                                "dtype":"int16",
-                                                "nodata":-999
+                                                "dtype":np.uint8,
+                                                "nodata":0
                                                 })
 
     print("-- trying to write raster... ")
