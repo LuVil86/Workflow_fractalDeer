@@ -27,10 +27,10 @@ def cleanAndFilter(inputRaster,toRemove, toMerge,minPatchSize,x1,x2,y1,y2,paddin
             toCross=[*toRemove,*toMerge]
             
 
-            maskRemove = np.array([[elem in toRemove for elem in row] for row in matrix]) 
+            maskRemove = np.array([[elem in toRemove for elem in row] for row in matrix], dtype=np.uint8) 
             
             
-            maskBoth = np.array([[elem in toCross for elem in row] for row in matrix]) 
+            maskBoth = np.array([[elem in toCross for elem in row] for row in matrix], dtype=np.uint8) 
             maskBoth = np.where(maskBoth==True, 1,0)
             ### le masque de l'érosion donne les endroits où l'algorithme doit opérer (il évitera les autres)
             ## -> on demande de faire l'érosion que sur les chemins
@@ -46,7 +46,7 @@ def cleanAndFilter(inputRaster,toRemove, toMerge,minPatchSize,x1,x2,y1,y2,paddin
             
             finArray = np.where(labeled_array[padding:padding+nrowOrig,padding:padding+ncolOrig] != 0, 1, 0)
         # print(f" cleanAndFilter executed in {datetime.now() - start} seconds ")
-        return finArray.astype(np.int16)
+        return finArray.astype(np.uint8)
 
 
 if __name__=="__main__":
