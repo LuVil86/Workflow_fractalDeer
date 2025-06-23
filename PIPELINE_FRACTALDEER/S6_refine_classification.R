@@ -28,11 +28,10 @@ if(!require(stringr)) {
 
 ### *** input parameters **** #############
 ### mettre le chemin au dossier des résultats 
-resultFolder="/media/luvil/T7_ROUGE/results_grisons/"
+resultFolder="/media/loreto/Grande/"
 
 #### **** ICI  copier le contenu de la colonne "fullPath" de la ligne de stepSize à analyser ***** #####
-fullPath="/home/luvil/results_grisons/OUT_20197_deerYear_2018-2019/20197_deerYear_2018-2019_stepSize_1591_autocorrelation_timeSeriesKmeans_2_classes.csv"
-
+fullPath="/media/loreto/Grande/ie-ofev-24-25/cerf_movement_patterns/red_deer_grisons_parsed_2_to_analyse/traité/OUT_20215_deerYear_2019-2020/20215_deerYear_2019-2020_stepSize_1491_autocorrelation_timeSeriesKmeans_2_classes.csv"
 
 #### *** ICI la mesure à prendre en compte : "ratio_endNSD", "ratio_meanNSD" ou "ratio_cumulativeNSD" ***** #######
 parameter="ratio_meanNSD"
@@ -40,7 +39,6 @@ parameter="ratio_meanNSD"
 #parameter="ratio_cumulativeNSD"
 
 ################################################################################################################################
-
 
 
 inBehaviourFile=paste0(resultFolder,str_split_fixed(fullPath, '/', 5)[1,5])

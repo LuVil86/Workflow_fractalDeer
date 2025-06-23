@@ -38,7 +38,7 @@ def getDeerYear(gdf_cerf,yearList:list):
     else:
         #deerYear=[pd.Timestamp(i-1,3,1),pd.Timestamp(i,2,28)+pd.Timedelta(days=1)]
 """
-      deerYear=[pd.Timestamp(i-1,6,1),pd.Timestamp(i,5,31)+pd.Timedelta(days=1)]
+      deerYear=[pd.Timestamp(i-1,12,1),pd.Timestamp(i,11,30)+pd.Timedelta(days=1)]
       for index, row in gdf_cerf.iterrows():
                if deerYear[0]<row.dateTime<=deerYear[1]:
                     deerYearVector.iloc[index]=f"deerYear_{i-1}-{i}"
@@ -77,7 +77,7 @@ def getSunPeriod(gdf_cerf:gp.GeoDataFrame, country:str):
 
 ### environment parameters ###
 #workDir="/".join(sys.argv[0].split("/")[:-1])
-workDir="/media/loreto/Grande/ie-ofev-24-25/cerf_movement_patterns/red_deer_grisons_parsed_1/"
+workDir="/media/loreto/Grande/ie-ofev-24-25/cerf_movement_patterns/red_deer_grisons_parsed_2/"
 
 overwrite=True
 
@@ -156,14 +156,14 @@ for animalName in set(allDat["animals_original_id"]):
         os.mkdir(resultPath)
     except OSError as error:
         pass
-    csvPath=os.path.join(resultPath,f"{animalName}_allFixes_formatted_1.csv")
+    csvPath=os.path.join(resultPath,f"{animalName}_allFixes_formatted_2.csv")
     if not os.path.isfile(csvPath) or overwrite:
         subset_cerf.to_csv(os.path.join(resultPath,f"{animalName}_allFixes_formatted_1.csv"), index=False)   
-        subset_cerf.drop(["UTC_DATE", "UTC_TIME"],axis=1).to_file("/media/loreto/Grande/ie-ofev-24-25/cerf_movement_patterns/RED_DEER_GRISONS_allFixes_formatted_1.gpkg", driver='GPKG', layer=str(animalName))
+        subset_cerf.drop(["UTC_DATE", "UTC_TIME"],axis=1).to_file("/media/loreto/Grande/ie-ofev-24-25/cerf_movement_patterns/RED_DEER_GRISONS_allFixes_formatted_2.gpkg", driver='GPKG', layer=str(animalName))
         
     else:
         print("file already exists : no overwriting")
 
 finalStat["Duration_days"]=(finalStat["endDT"]-finalStat["startDT"]).dt.days
 finalStat["is_full_year"]=finalStat["Duration_days"].apply(lambda x : "yes" if x>=364 else "no")
-finalStat.to_csv("media/loreto/Grande/ie-ofev-24-25/cerf_movement_patterns/RED_DEER_GRISONS_fixes_counts_1.csv", index=False)
+finalStat.to_csv("/media/loreto/Grande/ie-ofev-24-25/cerf_movement_patterns/RED_DEER_GRISONS_fixes_counts_2.csv", index=False)
