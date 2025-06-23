@@ -162,7 +162,7 @@ if __name__=="__main__":
                                                 "height": finalMat.shape[0],
                                                 "width": finalMat.shape[1],
                                                 "dtype":"uint8",
-                                                "nodata":-9999
+                                                "nodata":0
                                                 })
 
     print("-- trying to write raster... ")

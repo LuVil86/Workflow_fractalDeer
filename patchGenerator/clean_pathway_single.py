@@ -103,8 +103,8 @@ if __name__=="__main__":
     toAssign=15
 
     ### input and output
-    inputRaster="/home/luvil/test_cleanPathway_fillHoles/HabitatMap_cerf_15avril25_clip_EROSION.tif"
-    outputRaster="/home/luvil/test_cleanPathway_fillHoles/HabitatMap_cerf_15avril25_clip_EROSION_PATCHES.tif"
+    inputRaster="/home/luvil/test_cleanPathway_fillHoles/HabitatMap_cerf_15avril25_clip.tif"
+    outputRaster="/home/luvil/test_cleanPathway_fillHoles/HabitatMap_cerf_15avril25_clip_EROSION.tif"
 
 
     with rio.open(inputRaster) as inp:
