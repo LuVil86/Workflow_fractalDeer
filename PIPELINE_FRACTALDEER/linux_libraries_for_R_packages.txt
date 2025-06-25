@@ -1,6 +1,2 @@
-sudo apt install libudunits2-dev
-
-sudo apt-get install libgdal-dev libgeos-dev libproj-dev libtbb-dev
-sudo apt install libgmp-dev
-sudo apt-get install libmpfr-dev
-sudo apt install libgsl-dev
+#!/bin/bash
+sudo apt install -y libharfbuzz-dev libfribidi-dev libfontconfig1-dev libudunits2-dev libgdal-dev libgeos-dev libproj-dev libtbb-dev libgmp-dev libmpfr-dev libgsl-dev

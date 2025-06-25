@@ -83,7 +83,7 @@ overwrite=True
 
 
 
-allDat=pd.read_csv("/media/luvil/T7/IE-OFEV/cerf_jura/loc_jura.txt", delimiter="\t", decimal=".")
+allDat=pd.read_csv("/home/luvil/IE-OFEV/cerf_jura/loc_jura.txt", delimiter="\t", decimal=".")
 
 c=1
 for animalName in set(allDat["id"]):
@@ -102,7 +102,7 @@ for animalName in set(allDat["id"]):
 
 
     subset_cerf=gp.GeoDataFrame({"prenom":tmp.prenom,
-                                #"sexe":tmp.sexe,
+                                "sexe":"femelle",
                                 "annee":tmp.year,
                                 "mois":tmp.mois,
                                 "saison":tmp.saison, 
@@ -156,11 +156,11 @@ for animalName in set(allDat["id"]):
     csvPath=os.path.join(resultPath,f"{animalName}_allFixes_formatted.csv")
     if not os.path.isfile(csvPath) or overwrite:
         subset_cerf.to_csv(os.path.join(resultPath,f"{animalName}_allFixes_formatted.csv"), index=False)   
-        subset_cerf.drop(["UTC_DATE", "UTC_TIME"],axis=1).to_file("/media/luvil/T7/IE-OFEV/cerf_jura/RED_DEER_JURA_allFixes_formatted.gpkg", driver='GPKG', layer=str(animalName))
+        subset_cerf.drop(["UTC_DATE", "UTC_TIME"],axis=1).to_file(os.path.join(workDir, "RED_DEER_JURA_allFixes_formatted.gpkg"), driver='GPKG', layer=str(animalName))
         
     else:
         print("file already exists : no overwriting")
 
 finalStat["Duration_days"]=(finalStat["endDT"]-finalStat["startDT"]).dt.days
 finalStat["is_full_year"]=finalStat["Duration_days"].apply(lambda x : "yes" if x>=364 else "no")
-finalStat.to_csv("/media/luvil/T7/IE-OFEV/cerf_jura/RED_DEER_JURA_fixes_counts.csv", index=False)
+finalStat.to_csv(os.path.join(workDir, "RED_DEER_JURA_fixes_counts.csv"), index=False)
