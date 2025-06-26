@@ -161,8 +161,8 @@ outSuffix<-paste(selectedDeer, selectedYear, outNameSplit[6], outNameSplit[7]
 write.csv(tot, file=paste0(inFolder,"/results_Chisq_raw_refined_",parameter,"_",outSuffix) , row.names=F)
 
 
-finChisq$key1<-paste(finChisq$prenom, finChisq$deerYear, sep="_")
-ggplot(aes(x=stepSize, y=chisq.raw, colour=key1), data=finChisq)+geom_point()+geom_line()
+#finChisq$key1<-paste(finChisq$prenom, finChisq$deerYear, sep="_")
+#ggplot(aes(x=stepSize, y=chisq.raw, colour=key1), data=finChisq)+geom_point()+geom_line()
 
 
 

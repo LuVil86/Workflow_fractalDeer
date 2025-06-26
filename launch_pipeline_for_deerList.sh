@@ -1,11 +1,12 @@
 #!/bin/bash
 
 cd ~/Workflow_fractalDeer/PIPELINE_FRACTALDEER
-outFolder="~/results_grisons/"
+
+outFolder="/media/luvil/T7/IE-OFEV/results_Jura"
 while IFS=, read -r prenom deerYear nbFixes	startDT endDT Duration_days	is_full_year
 do
 
 
-inFile=~/IE-OFEV/grisons_data/red_deer_grisons_parsed/${prenom}/${prenom}_${deerYear}.csv
+inFile=/media/luvil/T7/IE-OFEV/cerf_jura/${prenom}/${prenom}_${deerYear}.csv
 eval /home/luvil/Workflow_fractalDeer/PIPELINE_FRACTALDEER/L1_launch_fractalDeer.sh ${inFile} ${outFolder}
-done < <(tail -n+2 ~/IE-OFEV/grisons_data/subset_red_deer_70percent_days.csv)
+done < <(tail -n+2 /media/luvil/T7/IE-OFEV/cerf_jura/RED_DEER_JURA_fixes_counts_subset_70_percent.csv)

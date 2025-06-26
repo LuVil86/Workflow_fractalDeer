@@ -18,7 +18,11 @@
 ### 
 ###  
 
+
+
 ###################################################################
+scriptPath<-dirname(rstudioapi::getSourceEditorContext()$path)
+setwd(scriptPath)
 source("./getNSDValues.R")
 source("./refineClusteringByNSD.R")
 require(fs)
@@ -28,10 +32,10 @@ if(!require(stringr)) {
 
 ### *** input parameters **** #############
 ### mettre le chemin au dossier des résultats 
-resultFolder="/media/luvil/T7_ROUGE/results_grisons/"
+resultFolder="/media/luvil/T7/results_Jura/"
 
 #### **** ICI  copier le contenu de la colonne "fullPath" de la ligne de stepSize à analyser ***** #####
-fullPath="/home/luvil/results_grisons/OUT_20197_deerYear_2018-2019/20197_deerYear_2018-2019_stepSize_1591_autocorrelation_timeSeriesKmeans_2_classes.csv"
+fullPath="/media/luvil/T7/IE-OFEV/results_Jura/OUT_blanche_deerYear_2013-2014/blanche_deerYear_2013-2014_stepSize_832_autocorrelation_timeSeriesKmeans_2_classes.csv"
 
 
 #### *** ICI la mesure à prendre en compte : "ratio_endNSD", "ratio_meanNSD" ou "ratio_cumulativeNSD" ***** #######
@@ -43,7 +47,8 @@ parameter="ratio_meanNSD"
 
 
 
-inBehaviourFile=paste0(resultFolder,str_split_fixed(fullPath, '/', 5)[1,5])
+#inBehaviourFile=paste0(resultFolder,str_split_fixed(fullPath, '/', 5)[1,5])
+inBehaviourFile <- fullPath
 dirPath=path_dir(inBehaviourFile)
 fileName=path_file(inBehaviourFile)
 x<-getNSDValues(inBehaviourFile, display="behaviour",save.plot=FALSE , mutate.df=TRUE, show.breakpoints = T)
