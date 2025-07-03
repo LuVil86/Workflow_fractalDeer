@@ -18,7 +18,11 @@
 ### 
 ###  
 
+
+
 ###################################################################
+scriptPath<-dirname(rstudioapi::getSourceEditorContext()$path)
+setwd(scriptPath)
 source("./getNSDValues.R")
 source("./refineClusteringByNSD.R")
 require(fs)
@@ -28,10 +32,13 @@ if(!require(stringr)) {
 
 ### *** input parameters **** #############
 ### mettre le chemin au dossier des résultats 
+
 resultFolder="/media/loreto/Grande/"
 
 #### **** ICI  copier le contenu de la colonne "fullPath" de la ligne de stepSize à analyser ***** #####
 fullPath="/media/loreto/Grande/ie-ofev-24-25/cerf_movement_patterns/red_deer_grisons_parsed_2_to_analyse/traité/OUT_20215_deerYear_2019-2020/20215_deerYear_2019-2020_stepSize_1491_autocorrelation_timeSeriesKmeans_2_classes.csv"
+
+
 
 #### *** ICI la mesure à prendre en compte : "ratio_endNSD", "ratio_meanNSD" ou "ratio_cumulativeNSD" ***** #######
 parameter="ratio_meanNSD"
@@ -41,7 +48,10 @@ parameter="ratio_meanNSD"
 ################################################################################################################################
 
 
-inBehaviourFile=paste0(resultFolder,str_split_fixed(fullPath, '/', 5)[1,5])
+
+
+#inBehaviourFile=paste0(resultFolder,str_split_fixed(fullPath, '/', 5)[1,5])
+inBehaviourFile <- fullPath
 dirPath=path_dir(inBehaviourFile)
 fileName=path_file(inBehaviourFile)
 x<-getNSDValues(inBehaviourFile, display="behaviour",save.plot=FALSE , mutate.df=TRUE, show.breakpoints = T)

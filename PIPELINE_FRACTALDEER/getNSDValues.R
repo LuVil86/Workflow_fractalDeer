@@ -39,6 +39,7 @@ plotTitle<-gsub("_"," ",tail(strsplit(plotTitle, split="/")[[1]],n=1))
 outDir=path_dir(behaviourFile)
 animalTest<-strsplit(plotTitle, split=" ")[[1]][1]
 plotTitle_for_classical<-paste(strsplit(plotTitle, split=" ")[[1]][1:3], collapse = " ")
+cat(" input behaviour file -->  ",behaviourFile,"\n")
 if(!grepl(".csv", behaviourFile)){stop("The file you provided does not have '.csv' extension")}
 if(mutate.df==TRUE){
 datCerfs<-readr::read_csv(behaviourFile)%>%
