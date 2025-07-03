@@ -35,18 +35,23 @@ if(!require(lubridate)) {
   install.packages("lubridate"); require(lubridate)}
 if(!require(adehabitatLT)) {
   install.packages("adehabitatLT"); require(adehabitatLT)}
-if(!require(arulesViz)) {
-  install.packages("arulesViz"); require(arulesViz)}
-if(!require(ggtext)) {
-  install.packages("ggtext"); require(ggtext)}
+
 if(!require(mclust)) {
   install.packages("mclust"); require(mclust)}
 if(!require(amt)) {
   install.packages("amt"); require(amt)}
-if(!require(grid)) {
-  install.packages("grid"); require(grid)}
+
 if(!require(snow)) {
   install.packages("snow"); require(snow)}
+  ################### GRAPHICAL PACKAGES : useless for pipeline mode ################3
+  # if(!require(arulesViz)) {
+  #   install.packages("arulesViz"); require(arulesViz)}
+  # if(!require(ggtext)) {
+  #   install.packages("ggtext"); require(ggtext)}
+  # if(!require(grid)) {
+  #   install.packages("grid"); require(grid)}
+  
+  
 })
 sourceDir <- function(path, trace = TRUE, ...) {
   op <- options(); on.exit(options(op)) # to reset after each 

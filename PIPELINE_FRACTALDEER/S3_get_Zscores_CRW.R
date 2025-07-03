@@ -29,27 +29,24 @@ suppressPackageStartupMessages({
   require(trajr)
   require(gdata)
   require(tidyverse)
-##################################
-if(!require(gridExtra)) {
-  install.packages("gridExtra"); require(gridExtra)}
-if(!require(ggrepel)) {
-  install.packages("ggrepel"); require(ggrepel)}
-
-if(!require(ggplot2)) {
-  install.packages("ggplot2"); require(ggplot2)}
-
-if(!require(FSA)) {
-  install.packages("FSA"); require(FSA)}
-if(!require(ggpubr)) {
-  install.packages("ggpubr"); require(ggpubr)}
-
-if(!require(factoextra)) {
-  install.packages("factoextra"); require(factoextra)}
-if(!require(FactoMineR)) {
-  install.packages("FactoMineR"); require(FactoMineR)}
-
-if(!require(multcompview)) {
-  install.packages("multcompview"); require(multcompview)}
+################################## GRAPHIC PACKAGES FOR PLOTTING : useless for the pipeline mode ################
+# if(!require(gridExtra)) {
+#   install.packages("gridExtra"); require(gridExtra)}
+# if(!require(ggrepel)) {
+#   install.packages("ggrepel"); require(ggrepel)}
+# 
+# if(!require(ggplot2)) {
+#   install.packages("ggplot2"); require(ggplot2)}
+# 
+# if(!require(FSA)) {
+#   install.packages("FSA"); require(FSA)}
+# if(!require(ggpubr)) {
+#   install.packages("ggpubr"); require(ggpubr)}
+# 
+# if(!require(factoextra)) {
+#   install.packages("factoextra"); require(factoextra)}
+# if(!require(FactoMineR)) {
+#   install.packages("FactoMineR"); require(FactoMineR)}
 
 })
 
