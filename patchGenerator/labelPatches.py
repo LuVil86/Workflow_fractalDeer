@@ -11,10 +11,10 @@ from scipy import ndimage as ndi
 if __name__=="__main__":
     print(" ********* LABEL PATCHES ********")
     ##### parameters
-    inputRasterPath="/home/luvil/test_cleanPathway_fillHoles/HabitatMap_cerf_forZN_cleanPathway_BINARY_PATCHES_w_secRoad_1000_buff100.tif"
-    basename=inputRasterPath.split("\.")[0]
-    outputRasterPath="/media/luvil/DATA/HabitatMap_cerf_forZN_cleanPathway_BINARY_PATCHES_w_secRoad_1000_buff100_LABELED.tif"
-   # outputRasterPath=basename+'_LABELED.tif'
+    inputRasterPath="/media/loreto/Grande/ie-ofev-24-25/variables/habitat_cerf_forZN/ZN_cerf_rAoi_BINARY_PATCHES_trail2_wo_clearing_secRoads.tif"
+    basename=inputRasterPath.split(".")[0]
+    #outputRasterPath="/media/luvil/DATA/HabitatMap_cerf_forZN_cleanPathway_BINARY_PATCHES_w_secRoad_1000_buff100_LABELED.tif"
+    outputRasterPath=basename+'_LABELED.tif'
 
 
 

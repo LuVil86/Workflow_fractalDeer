@@ -32,18 +32,22 @@ if(!require(stringr)) {
 
 ### *** input parameters **** #############
 ### mettre le chemin au dossier des résultats 
-resultFolder="/media/luvil/T7/results_Jura/"
+
+resultFolder="/media/loreto/Grande/"
 
 #### **** ICI  copier le contenu de la colonne "fullPath" de la ligne de stepSize à analyser ***** #####
-fullPath="/home/luvil/IE-OFEV/results_jura/OUT_blanche_deerYear_2013-2014/blanche_deerYear_2013-2014_stepSize_1789_autocorrelation_timeSeriesKmeans_2_classes.csv"
+
+fullPath="/media/loreto/Grande/ie-ofev-24-25/results_versoix/OUT_Baron_deerYear_2011-2012/Baron_deerYear_2011-2012_stepSize_623_autocorrelation_timeSeriesKmeans_2_classes.csv"
+
 
 
 #### *** ICI la mesure à prendre en compte : "ratio_endNSD", "ratio_meanNSD" ou "ratio_cumulativeNSD" ***** #######
-#parameter="ratio_meanNSD"
-parameter="ratio_endNSD"
+parameter="ratio_meanNSD"
+#parameter="ratio_endNSD"
 #parameter="ratio_cumulativeNSD"
 
 ################################################################################################################################
+
 
 
 
