@@ -16,6 +16,8 @@ fi
 
 #### environement check #####
 
+cd "$(dirname "$0")"
+
 currentEnvir=$(echo $CONDA_PREFIX | awk -F "/" '{print $NF}')
 echo "current Environment : " ${currentEnvir}
 if [[ "${currentEnvir}" != "pipeline_fractalDeer" ]]
@@ -59,7 +61,11 @@ start_time="$(date -u +%s)"
 
 ##### -0. plot migrateR results ####
 /usr/bin/Rscript ./S0_plotMigrateR.R "${inPath}" "${outFolder}" TRUE
-
+if [[ $? -eq 1 ]]
+then
+echo " ************** Script S0 returned an error : aborting pipeline ************************"
+exit 2   
+fi
 ### -1. ** generate CRW ** ####
 /usr/bin/Rscript ./S1_generate_CRW.R "${inPath}" "${outFolder}"
 

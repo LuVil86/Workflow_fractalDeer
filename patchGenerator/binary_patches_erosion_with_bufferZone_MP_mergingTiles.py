@@ -7,31 +7,39 @@ from rasterio.merge import merge
 from datetime import datetime
 from rasterio.windows import Window
 from concurrent.futures import ProcessPoolExecutor, as_completed
+import glob
 #assert np.__version__>=1.24
 
 
-def cleanAndFilter(inputRaster,toRemove, toMerge,minPatchSize,x1,x2,y1,y2,padding,nrow,ncol,k) :  
+def cleanAndFilter(inputRaster,toRemove, toMerge,minPatchSize,minPatchMethod,x1,x2,y1,y2,padding,nrow,ncol,k, outputTileFolder) :  
     start = datetime.now()
     
     nrowOrig=y2-y1
     ncolOrig=x2-x1
 #  print(f"y1 = {y1}, y2 = {y2}, x1 = {x1}, x2={x2}")
 #    print(f"nrowOrig = {nrowOrig} , ncolOrig = {ncolOrig}")
-    if (x1-padding<0 or y1-padding<0 or x2+padding>ncol or y2+padding>nrow):  ### this is for the upper-left tile
-        print(f"the tile {k} is a border tile : no computation required")
-        return np.zeros((nrowOrig,ncolOrig))
+    if (x1-padding<0 or y1-padding<0 or x2+padding>ncol or y2+padding>nrow):  ### this is for the boundary tiles
+            print(f"the tile {k} is a border tile : no computation required")
+            return("BORDER")
     else:
         with rio.open(inputRaster) as src:
             
-            matrix=src.read(1,window=Window.from_slices((y1-padding, y2+padding), (x1-padding, x2+padding)))
-            
+            in_meta = src.meta.copy()
+            win=Window.from_slices((y1-padding, y2+padding), (x1-padding, x2+padding))
+            matrix=src.read(1,window=win)
+
+
+            win_transform = src.window_transform(win)
+
+            in_meta.update({ "height":matrix.shape[0], 
+                            "width":matrix.shape[1],
+                            "nodata":0,
+                            "transform":win_transform})
+
+                
             toRemove=[*toRemove]
             toCross=[*toRemove,*toMerge]
-            
-
             maskRemove = np.array([[elem in toRemove for elem in row] for row in matrix], dtype=np.uint8) 
-            
-            
             maskBoth = np.array([[elem in toCross for elem in row] for row in matrix], dtype=np.uint8) 
             maskBoth = np.where(maskBoth==True, 1,0)
             ### le masque de l'érosion donne les endroits où l'algorithme doit opérer (il évitera les autres)
@@ -55,11 +63,15 @@ def cleanAndFilter(inputRaster,toRemove, toMerge,minPatchSize,x1,x2,y1,y2,paddin
                 else:
                     print("method to estimate patch size does not exist: aborting script")
                     raise ValueError
-                finArray = np.where(labeled_array[padding:padding+nrowOrig,padding:padding+ncolOrig] != 0, 1, 0)
-        # print(f" cleanAndFilter executed in {datetime.now() - start} seconds ")
-                return (finArray.astype(np.uint8))
+                finArray = np.where(labeled_array != 0, 1, 0)
+                with rio.open(os.path.join(outputTileFolder,"Tile_"+str(k)+".tif"), "w",**in_meta) as dest:
+                     dest.write(finArray,1)
+                     return("OK")
+        # print(f" cleanAndFilter executed in {datetime.now() - start} seconds "
             else:
-                return((erosion[padding:padding+nrowOrig,padding:padding+ncolOrig].astype(np.uint8)))
+                with rio.open(os.path.join(outputTileFolder,"Tile_"+str(k)+".tif"), "w",**in_meta) as dest:
+                     dest.write(erosion,1)
+                     return("OK")
 
 
 if __name__=="__main__":
@@ -72,17 +84,17 @@ if __name__=="__main__":
     #### habitat that are merged to consider a nodal zone
     toMerge=[13,15,16,17]
     ### minimum nodal zone size in the tile + buffer (in pixel size)
-    minPatchSize = 10    #### 12000 *25sq.m = 300'000sq.m = 30ha :: however the stacking is on a "first-come" strategy so you might
+    minPatchSize = 4000    #### 12000 *25sq.m = 300'000sq.m = 30ha :: but beware that it is dependent on tile size therefore big ZN might be "cut and discarded"
     minPatchMethod = "pixel_count"
     ### tile size
-    tileSize=(100,100)
+    tileSize=(2000,2000)
     ### percent of tile size used to buffer (8 square )
-    percentBuffer=50
+    percentBuffer=100
     
     ### input and output
-    inputRaster="/home/luvil/test_cleanPathway_fillHoles/HabitatMap_cerf_for_ZN_clip.tif"
-    outputRaster="/home/luvil/test_cleanPathway_fillHoles/HabitatMap_cerf_forZN_rAoi_BINARY_PATCHES_erosion_KEEPALL_cleaned_secRoad.tif"
-    ouptutTileFolder = "/home/luvil/test_cleanPathway_fillHoles/ZN_tiles/"
+    inputRaster="/home/luvil/test_cleanPathway_fillHoles/HabitatMap_cerf_forZN_rAoi.tif"
+    outputRaster="/home/luvil/test_cleanPathway_fillHoles/HabitatMap_cerf_forZN_rAoi_BINARY_PATCHES_2000_buff100_erosion_30Ha_cleaned_secRoad.tif"
+    outputTileFolder = "/home/luvil/test_cleanPathway_fillHoles/ZN_tiles/"
 
 
     finResults={}
@@ -135,52 +147,26 @@ if __name__=="__main__":
                                         padding,
                                         nrow,
                                         ncol
-                                        ,k)]=k
+                                        ,k, outputTileFolder)]=k
                                                 
             
         for future in as_completed(poolDF):
             
             try:
             
-                finResults[poolDF[future]]=future.result()[1]
+                finResults[poolDF[future]]=future.result()
                 print(f"tile {poolDF[future]} done")
 
             except Exception as exc:
                 print('%r generated an exception: %s' % (poolDF[future], exc))
 
 
-######### ***GATHERING RESULTS **** ########
-
-    tmpRow=[]
-    for i in range(len(splitCoordsYStart)):
-        tmpRow.append(np.hstack(tuple([finResults[(i,j)] for j in range(len(splitCoordsXStart))])))
-        
-        print(f"column {i} stacking done")
-    finResults=None
-
-    finalMat=np.vstack(tuple([i for i in tmpRow])).astype(np.uint8)
-    print("row stacking done")
-
-
-
-##############################################
-
-    print("  ##############  ARRAY DONE  ###########")
-    print(f" -- final array size : {finalMat.shape[0]} rows X {finalMat.shape[1]} columns")
-    print (f" total elapsed time : {datetime.now()-start}")
+    m, out_transform = merge(glob.glob(outputTileFolder+"*.tif"), method="max")
+    finArray = np.squeeze(m, axis=0)
+    print(finArray.shape)
+    out_meta.update({"height":finArray.shape[0],
+                      "width":finArray.shape[1],
+                      "transform" : out_transform})
     
-    print("  ##############  ARRAY DONE  ###########")
-    print (f" total elapsed time : {datetime.now()-start}")
-    out_meta.update({"driver": "GTiff",
-                                                "height": finalMat.shape[0],
-                                                "width": finalMat.shape[1],
-                                                "dtype":"uint8",
-                                                "nodata":0
-                                                })
-
-    print("-- trying to write raster... ")
-    try:
-        with rio.open(outputRaster,"w",**out_meta) as dst:
-                dst.write(finalMat,1)   
-    except Exception as exc:
-        print("writing raster generated an exception : ", exc)
+    with rio.open(outputRaster, "w", **out_meta) as dest:
+        dest.write(finArray, 1)

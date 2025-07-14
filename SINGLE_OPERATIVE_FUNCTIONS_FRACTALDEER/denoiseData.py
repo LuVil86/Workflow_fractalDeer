@@ -4,10 +4,11 @@ import pandas as pd
 import denoiseFunctions
 import sys
 import os
-workDir="/".join(sys.argv[0].split("/")[:-1])
+#workDir="/".join(sys.argv[0].split("/")[:-1])
+workDir = "~/IE-OFEV/cerf_jura/"
 
-animalName="20074"
-deerYear="deerYear_2011-2012"
+animalName="blanche"
+deerYear="deerYear_2013-2014"
 tmp=pd.read_csv(os.path.join(workDir,animalName, f"{animalName}_{deerYear}.csv" ))
 gdf_cerf=gpd.GeoDataFrame(tmp, geometry=gpd.GeoSeries.from_wkt(tmp.geometry),crs=2056)
 
@@ -16,7 +17,7 @@ gdf_cerf=gpd.GeoDataFrame(tmp, geometry=gpd.GeoSeries.from_wkt(tmp.geometry),crs
 sh_f1=-0.6
 multiplier1_f1=4
 multiplier2_f1=4
-speed_f1=2000 ### > 2km de déplacement 
+speed_f1=2000 ### > 2km de déplacement à l'heure
 netSpeed_f1=True
 gdf_denoised=denoiseFunctions.denoisePipeline(gdf_cerf,
 netSpeed=netSpeed_f1,

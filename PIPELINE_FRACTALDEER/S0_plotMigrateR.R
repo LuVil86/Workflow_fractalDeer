@@ -1,16 +1,24 @@
 
 plotMigrateR<-function(behaviourFile=character(), outDir=character(),mutate.df=TRUE){
-  suppressPackageStartupMessages({
-  require(multidplyr)
-  require(tidyverse)
-  require(lubridate)
-  require(adehabitatLT)
-  require(arulesViz)
-  require(gdata)
-  require(ggplot2)
-  require(ggtext)
-  require(fs)
-  })
+  
+  repoSW ="https://stat.ethz.ch/CRAN/"
+#suppressPackageStartupMessages({
+if(!require(MASS)) {
+  install.packages("MASS",repos=repoSW, depedencies=TRUE); require(MASS)}
+if(!require(trajr)) {
+  install.packages("trajr",repos=repoSW, depedencies=TRUE); require(trajr)}
+if(!require(ggplot2)) {
+  install.packages("ggplot2",repos=repoSW, depedencies=TRUE); require(ggplot2)}
+if(!require(gdata)) {
+  install.packages("gdata",repos=repoSW, depedencies=TRUE); require(gdata)}
+if(!require(tidyverse)) {
+  install.packages("tidyverse",repos=repoSW, depedencies=TRUE); 
+  require(tidyverse)}
+if(!require(fs)) {
+  install.packages("fs",repos=repoSW, depedencies=TRUE); require(fs)}
+if(!require(adehabitatLT)) {
+  install.packages("adehabitatLT",repos=repoSW, depedencies=TRUE); require(adehabitatLT)}
+#})
   sourceDir <- function(path, trace = TRUE, ...) {
     op <- options(); on.exit(options(op)) # to reset after each 
     for (nm in list.files(path, pattern = "[.][RrSsQq]$")) {

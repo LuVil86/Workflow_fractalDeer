@@ -180,13 +180,14 @@ def denoisePipeline(gdf,netSpeed=True,angle_sharpness=-0.6, netNext_multiplier=4
     number of sharp angles detected : {len(sharp)}
     number of sharp angles with  netDist bigger than {maxSpeed} from previous point :{len(sharp2)}
     number of points removed : {len(sharpHigh)}
-    number of points after denoising : {len(gdf_denoised)}""")
+    """)
     if len(sharpHigh)>0:
         indexToRemove=[i+2 for i in sharpHigh.pointIndex]
         print("indexes of removed points : ")
         print([i for i in indexToRemove])
         gdf_denoised=gdf.drop(gdf.index[indexToRemove]).reset_index()
         gdf_denoised.rename({"index":f"indFilt_{filterIndex}"},axis=1, inplace=True)
+        print(f" --> number of points after denoising : {len(gdf_denoised)}")
     else:
         print("no problematic points were detected with the provided parameters")
         return(gdf)

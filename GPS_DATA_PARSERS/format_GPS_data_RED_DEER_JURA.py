@@ -99,7 +99,7 @@ for animalName in set(allDat["id"]):
     tmp["saison"]=tmp["dateTime"].dt.month.apply(mapSeasons)
     #tmp["sexe"]=cerfInfo.loc[cerfInfo["animals_original_id"]==animalName].sex
     nbYear=tmp["year"].unique().tolist()
-
+    tmp = tmp.loc[tmp.duplicated(subset="dateTime", keep="first")==False].copy()
 
     subset_cerf=gp.GeoDataFrame({"prenom":tmp.prenom,
                                 "sexe":"femelle",
@@ -146,6 +146,7 @@ for animalName in set(allDat["id"]):
             pass
         csvPath=os.path.join(resultPath,f"{str(animalName)}_{yearTest}.csv")
         if not os.path.isfile(csvPath) or overwrite:
+           
             subYear.to_csv(os.path.join(resultPath,f"{str(animalName)}_{yearTest}.csv"), index=False)   
         else:
             print("file already exists : no overwriting")
