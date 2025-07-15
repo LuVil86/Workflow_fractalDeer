@@ -6,6 +6,7 @@ from datetime import datetime
 from rasterio.windows import Window
 from rasterio.merge import merge
 import glob
+import os
 from concurrent.futures import ProcessPoolExecutor, as_completed
 #assert np.__version__>=1.24
 
@@ -94,20 +95,17 @@ if __name__=="__main__":
     minPatchSize = 100
     tileSize=(100,100)
     '''
-    percentBuffer=200
+    percentBuffer=100
     nNeighbor=1
-    minPatchSize = 16000
-    minPatchMethod = "pixel_count"
-    tileSize=(1000,1000)
+    minPatchSize = 4000
+    minPatchMethod = "envelope"
+    tileSize=(2000,2000)
 
     ### input and output
     
     inputRaster="/home/luvil/test_cleanPathway_fillHoles/HabitatMap_cerf_forZN_rAoi.tif"
-    
-    
-    outputRaster="/home/luvil/test_cleanPathway_fillHoles/HabitatMap_cerf_forZN_cleanPathway_BINARY_PATCHES_w_secRoad.tif"
+    outputRaster="/home/luvil/test_cleanPathway_fillHoles/HabitatMap_cerf_forZN_rAoi_BINARY_PATCHES_2000_buff100_clean_pathway_10Ha_cleaned_secRoad.tif"
     outputTileFolder = "/home/luvil/test_cleanPathway_fillHoles/ZN_tiles/"
-
 
     finResults={}
     with rio.open(inputRaster) as inp:
