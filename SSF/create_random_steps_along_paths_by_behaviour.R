@@ -3,14 +3,11 @@
 ##### - By Loreto Urbina et Lucas Villard
 #### --------------------------------------- ################
 
-library(raster)
 library(lubridate)
 library(amt)
 library(tidyverse)
 library(sf)
 library(stringr)
-library(ggtext)
-library(janitor)
 
 create_random_step_along_path_by_behaviour<-function(behaviourFile=character(), chosenBehaviour=character(), nbRandom=numeric()){
   ###adding a only one "refined" trajectory, please verify that var1 correspond to "in-habitat" behaviour and is equal to "mc_1"
@@ -20,24 +17,30 @@ create_random_step_along_path_by_behaviour<-function(behaviourFile=character(), 
     mutate(deerYear=factor(deerYear))%>%
     mutate(saison=factor(saison))%>%
     mutate(behaviour=factor(behaviour))%>%
-    mutate(jourNuit=factor(jourNuit))#if new cerfs IE-OFEV changer jour nuit par tod
+    mutate(jourNuit=factor(jourNuit))%>%#if new cerfs IE-OFEV
+    mutate(jura=factor(jura))#if cerfs jura
   # mutate(jourNuit=factor(tod))#if cerfs from article FractalDeer
   suppressWarnings(datCerf<-datCerf%>%transform(saison = forcats::fct_relevel(saison, c("Mars-Mai","Juin-Aout","Septembre-Novembre","Decembre-Fevrier"))))
   var1<-"mc_1"
   datCerf<- datCerf%>%mutate(behaviour=ifelse(behaviour==var1,"in-patch", "in-matrix"))%>%
-    mutate(behaviour=factor(behaviour))
+    mutate(behaviour=factor(behaviour))%>%
+    dplyr::select(c("path_no", "x", "y","t","saison", "jourNuit","deerYear","behaviour"))
   print(datCerf%>%tabyl(behaviour))
   
-  # if(exists("testInt")){rm(testInt)}
-  # for(chosenBehaviour in levels(datCerf$behaviour)){
-  datCerfSub<-datCerf%>%filter(behaviour==chosenBehaviour)%>%
+
+  datCerfSub<-datCerf%>%
+    filter(behaviour==chosenBehaviour)%>%
     droplevels() 
-    datPath<-datCerfSub%>%nest_legacy(-path_no)
-    print(head(datCerfSub))
+  
+    datPath<-datCerfSub%>%
+    nest_legacy(-path_no)
+
+    
   trk_all<-datPath%>%mutate(trk=lapply(data, function(d){
     amt::make_track(d,x,y,t, crs=2056,all_cols = TRUE)
   }))
-  #estimate step lengths and turning angles by path_no
+  
+
   sLsTa_all<-datPath%>%mutate(sLsTa=lapply(data, function(d){
     amt::make_track(d,x,y,t, crs=2056,all_cols = TRUE)%>%
       #summarize_sampling_rate()
