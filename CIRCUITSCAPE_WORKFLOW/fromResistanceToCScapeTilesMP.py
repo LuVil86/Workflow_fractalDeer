@@ -12,15 +12,14 @@ from pathlib import Path
 
 ####### parameters ############
 
-rasterPath="/media/loreto/Grande/ie-ofev-24-25/ssf_plateau/ssf_raster/output/resistance_cerf_plateau_2juin25_clip.tif"
+rasterPath="/media/loreto/Grande/ie-ofev-24-25/ssf_alps/ssf_raster/output/resistance_cerf_alps_16_juil_25_clip.tif"
 
-CScapeOutPath="/media/loreto/Grande/ie-ofev-24-25/csc_cerf_plateau/tuile"
+CScapeOutPath="/home/loreto/Documents/tuile_1"
 
-plateau = pd.read_csv('/media/loreto/Grande/ie-ofev-24-25/csc_cerf_plateau/grille/grille_2000_plateau.csv')
-plateauIndex=plateau["id"].to_list()
+tiles = pd.read_csv('/media/loreto/Grande/ie-ofev-24-25/csc_cerf_alps/grille/grille_3000_alps.csv')
 
 percentBuffer=100
-tileSize=(2000,2000)
+tileSize=(3000,3000)
 force_square=True,
 checkTotalSize=False
 nProc=10
@@ -41,7 +40,7 @@ f'\n'
 f'[Calculation options]\n'
 f'low_memory_mode = False\n'
 f'parallelize = True\n'
-f'solver = cholmod'\n
+f'solver = cholmod\n'
 f'print_timings = True\n'
 f'max_parallel = 2\n'
 f'\n'
@@ -155,11 +154,13 @@ def submitTile(rasterPath,rowStart, rowStop, colStart, colStop, padding, k, outp
                         f.write('using Circuitscape\n')
                         f.write(f'compute("{os.path.join(outputPath, f"t{k}_ew.ini")}")')
 
-        return(f" *** sumbmitTile  for tile {k} done ****")
+        return(f" *** submitTile  for tile {k} done ****")
 if __name__ == "__main__":    
         #pathName, fileName = os.path.split(outputPath)
         start=datetime.now()
         CScapeOutPath=Path(CScapeOutPath)
+        tilesIndex=tiles["id"].to_list()
+
         if not os.path.exists(CScapeOutPath):
                 print(""" ***** output directory for CircuitScape does not exists : please create it 
                 (I could create it for you but I would not since output folder the size could be HUGE !!) ******
@@ -220,9 +221,9 @@ if __name__ == "__main__":
                                 rowStart=splitCoordsYStart[j]
                                 rowStop=splitCoordsYStop[j]+1
 
-                                if (rowStart-padding<0 or colStart-padding<0 or colStop+padding>ncol or rowStop+padding>nrow):  ### this is for the upper-left tile
-                                        #win=Window.from_slices((rowStart, rowStop+padding), (colStart, colStop+padding))  
-                                        continue
+                                if (rowStart-padding<0 or colStart-padding<0 or colStop+padding>ncol or rowStop+padding>nrow): 
+									print(f"the tile {k} is a border tile : no computation required")
+                                    continue
                                 
                                
                         #   elif rowStart-padding<0: ## these are for the tiles that are on top (apart from the upper-left tile)
@@ -231,14 +232,13 @@ if __name__ == "__main__":
                         #         win=Window.from_slices((rowStart-padding, rowStop+padding), (colStart, colStop+padding))
                                 else:
                                         
-                                        if k not in plateauIndex:
-                                            #print(f' tile {k} is not in plateau :: skipping it')
+                                        if k not in tilesIndex:
+                                            print(f' tile {k} is not in the tile indexes you provided :: skipping it')
                                             continue
                                         else:
-                                       # print(f"{rasterPath} :: {rowStart}, {rowStop},{colStart} {colStop}, {padding}, {k}, {outputPath}")
                                             futures.append(executor.submit(submitTile, rasterPath, rowStart, rowStop,colStart, colStop, padding, k , CScapeOutPath))
                 for r in as_completed(futures):
                         print(r.result())
-        print(f" ******** DONE *********")
+        print(" >>>> SCRIPT COMPLETED")
         print(f" total duration : {datetime.now()-start}")
         print(f" k = {k}")

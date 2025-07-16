@@ -15,9 +15,9 @@ from rasterio.windows import Window
 from concurrent.futures import ProcessPoolExecutor, as_completed
 #assert np.__version__>=1.24
 
-def computeRSF(enviVars,enviCoefs ,enviRasterDir, habRasterPath, habCoefs, x1,x2,y1,y2):
-        
-   
+def computeRSF(enviCoeff, habRasterPath, habCoefs, x1,x2,y1,y2,k):
+   print(" running resistance calculation for tile {k}")  
+   ##### assign coefficients to habitat classes ########
     with rio.open(habRasterPath) as habPath:
         habVar = habPath.read(1,window=Window.from_slices((y1, y2+1), (x1, x2+1)))
         
@@ -28,16 +28,19 @@ def computeRSF(enviVars,enviCoefs ,enviRasterDir, habRasterPath, habCoefs, x1,x2
         #Calculate the habitat terms b*landuse
         for key, value in data_dict.items():
             habTerm[habVar==key] = value
-    a=0
+            
+	### stock habitat coefficient raster within termList
     TermList=[]
     TermList.append(habTerm)
-    for enviVar in enviVars: 
-        enviVar_input = f"{enviRasterDir}/{enviVar}.tif"
-        with rio.open(enviVar_input) as src:
+    
+    ###### multiply each continuous variable raster with its respective coefficient 
+    ###### --> add them to TermList    
+    for covar in enviCoeff: 
+        with rio.open(covar) as src:
             arr=src.read(1,window=Window.from_slices((y1, y2+1), (x1, x2+1)))
-            TermList.append(arr*enviCoefs[a])
-            a=a+1
-            
+            TermList.append(arr*enviCoeff[covar])
+         
+    #### stack everything #######   
     TermStack=np.stack(TermList, axis=0)
 
     sumTerms = np.sum(TermStack, axis=0, dtype=np.float32)
@@ -55,25 +58,34 @@ if __name__=="__main__":
     start = datetime.now()
     ################################ *** input parameters *** ###########################################
     
-    habRasterPath='/media/loreto/Grande/ie-ofev-24-25/ssf_plateau/ssf_raster/input/HabitatMap_cerf_6mai25_for_resistances.tif'
-    habCoefs= pd.read_csv('/media/loreto/Grande/ie-ofev-24-25/ssf_plateau/ssf_raster/unique_habitat_cerf_for_resistance_coef.csv')
+    habRasterPath='/media/loreto/Grande/ie-ofev-24-25/variables/habitat_cerf_for_resistances/HabitatMap_cerf_07juil25_for_resistances.tif'
+    habCoefs= pd.read_csv('/media/loreto/Grande/ie-ofev-24-25/ssf_alps/ssf_raster/unique_habitat_cerf_for_resistance_coef_fifth_model.csv')
        
-       
-    enviRasterDir = '/media/loreto/Grande/ie-ofev-24-25/ssf_plateau/ssf_raster/input'
-    outFile = '/media/loreto/Grande/ie-ofev-24-25/ssf_plateau/ssf_raster/output/resistance_cerf_plateau_2juin25.tif'
-       
-    enviVars=['Density_Buildings_100_opt2_log+1_scaled',
-                 'Density_Merge_RoadPrimary__100_opt_log+1_scaled',
-                 'Density_Merge_RoadSecondary__50_opt_log+1_scaled',
-                 'Dist_Merge_Bati_16b_log+1_scaled',
-                 'Dist_Merge_RoadPrimary_16b_log+1_scaled',
-                 'Density_Forest_200_opt2_log+1_scaled']
-       
-    enviCoefs=[-0.2747795, -0.1703838, -0.1507785, 0.2947973, -0.2489365, 0.8208416]#write coef for continuous variables by enviVars order
-       
+    
+    
+    enviCoeff={'/media/loreto/Grande/ie-ofev-24-25/ssf_alps/ssf_raster/input/Altitude_5m_16b_scaled.tif':-0.188666,
+                 '/media/loreto/Grande/ie-ofev-24-25/ssf_alps/ssf_raster/input/Density_Forest_100_opt2_log+1_scaled.tif':0.2631824,
+                 '/media/loreto/Grande/ie-ofev-24-25/ssf_alps/ssf_raster/input/Exposition_5m_16b_scaled.tif':-0.0304931,
+                 '/media/loreto/Grande/ie-ofev-24-25/ssf_alps/ssf_raster/input/Slope_5m_8b_scaled.tif':-0.2351524,
+                 
+                 
+                 
+                 '/media/loreto/Grande/ie-ofev-24-25/ssf_plateau/ssf_raster/input/Density_Buildings_100_opt2_log+1_scaled.tif':-0.2703594,
+                 '/media/loreto/Grande/ie-ofev-24-25/ssf_plateau/ssf_raster/input/Density_Merge_Autobahn__400_opt_log+1_scaled.tif':-0.1744547,
+                 '/media/loreto/Grande/ie-ofev-24-25/ssf_plateau/ssf_raster/input/Density_Merge_RoadPrimary__100_opt_log+1_scaled.tif':-0.1744547,
+                 '/media/loreto/Grande/ie-ofev-24-25/ssf_plateau/ssf_raster/input/Density_Merge_RoadSecondary_50_opt_log+1_scaled.tif':-0.157848,
+                 '/media/loreto/Grande/ie-ofev-24-25/ssf_plateau/ssf_raster/input/Dist_Merge_Bati_16b_log+1_scaled.tif':0.3101391,
+                 '/media/loreto/Grande/ie-ofev-24-25/ssf_plateau/ssf_raster/input/Dist_Merge_RoadPrimary_16b_log+1_scaled.tif':-0.2636759
+                 }
+                 
+                    
     tileSize=(6000,6000)
     nbProcessors = 10
     
+    
+    
+    outFile = '/media/loreto/Grande/ie-ofev-24-25/ssf_alps/ssf_raster/output/resistance_cerf_alps_16_juil_25.tif'
+
     ############################################################################################3
     
     finResults={}
@@ -97,9 +109,9 @@ if __name__=="__main__":
 
 
         
-        splitCoordsXStart=[ i[0] for i in np.array_split(np.arange(ncol),nbSplitX)]  ## number of splits in the x coordinates (so this is the "vertical cuts")
+        splitCoordsXStart=[ i[0] for i in np.array_split(np.arange(ncol),nbSplitX)] 
         splitCoordsXStop=[ i[-1] for i in np.array_split(np.arange(ncol),nbSplitX)]
-        splitCoordsYStart=[ i[0] for i in np.array_split(np.arange(nrow),nbSplitY)]  ## number of splits in the x coordinates (so this is the "horizontal cuts")
+        splitCoordsYStart=[ i[0] for i in np.array_split(np.arange(nrow),nbSplitY)]
         splitCoordsYStop=[ i[-1] for i in np.array_split(np.arange(nrow),nbSplitY)]
         tileIndex=[ (i,j) for i in range(len(splitCoordsYStart)) for j in range(len(splitCoordsXStart)) ]
     inp.close()
@@ -109,16 +121,15 @@ if __name__=="__main__":
         maxExp=[]
 
         for k in tileIndex:        
-                poolDF[executor.submit(computeRSF,enviVars,
-                                       enviCoefs,
-                                       enviRasterDir,
+                poolDF[executor.submit(computeRSF,
+									   enviCoeff,
                                        habRasterPath,
                                        habCoefs,
                                        splitCoordsXStart[k[1]],
                                        splitCoordsXStop[k[1]],
                                        splitCoordsYStart[k[0]],
                                        splitCoordsYStop[k[0]],
-                                       )]=k
+                                       k)]=k
                                        
             
         for future in as_completed(poolDF):
@@ -173,3 +184,4 @@ if __name__=="__main__":
                 dst.write(finalMat,1)   
     except Exception as exc:
         print("writing raster generated an exception : ", exc)
+	print(" >>>> SCRIPT COMPLETED")
