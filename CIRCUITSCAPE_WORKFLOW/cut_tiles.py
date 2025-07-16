@@ -10,18 +10,18 @@ Created on Tue Oct 10 12:10:17 2023
 import rasterio
 import os
 import geopandas as gpd
-
+from rasterio.mask import mask
 #CScapeFolder="/media/loreto/Linux/colo_tiles_1/out_tiles" #projet coloplato
 #CScapeFolder="/media/loreto/Grande/ie-ofev-24-25/csc_cerf_plateau/tuile"#ie-ofev:cerf-plateau
-CScapeFolder="/media/loreto/Grande/ie-ofev-24-25/csc_cerf_plateau/tuile_test_for_barriers_2_10000"#projet ie-ofev:cerf-plateau #test for value for barriers
+CScapeFolder="/home/loreto/Documents/tuile_0"
 
 #shpFolder="/media/loreto/Linux/colo_tiles_1/grille_20000"#projet coloplato
 #shpFolder="/media/loreto/Grande/ie-ofev-24-25/csc_cerf_plateau/grille_2000_plateau"#projet ie-ofev:cerf-plateau
-shpFolder="/media/loreto/Grande/ie-ofev-24-25/csc_cerf_plateau/grille_test_for_barriers/split_id"#projet ie-ofev:cerf-plateau #test for value for barriers
+shpFolder="/media/loreto/Grande/ie-ofev-24-25/csc_cerf_alps/grille_3000_alps"#projet ie-ofev:cerf-plateau #test for value for barriers
 
 #outFolder="/media/loreto/Linux/colo_tiles_1/cut_tiles"#projet ie-ofev:cerf-plateau
 #outFolder="/media/loreto/Grande/ie-ofev-24-25/csc_cerf_plateau/cut_tuile"#projet ie-ofev:cerf-plateau
-outFolder="/media/loreto/Grande/ie-ofev-24-25/csc_cerf_plateau/cut_tuile_for_barriers_2_10000"#projet ie-ofev:cerf-plateau #test for value for barriers
+outFolder="/media/loreto/Grande/ie-ofev-24-25/csc_cerf_alps/cut_tuile_alps_model0"#projet ie-ofev:cerf-plateau #test for value for barriers
 
 if __name__=="__main__":
     print("******** CUT TILES FROM CIRCUITSCAPE OUTPUTS *******\n")
@@ -43,7 +43,7 @@ if __name__=="__main__":
             coord=tileShape.geometry
             
             with rasterio.open(os.path.join(CScapeFolder,file)) as src:
-                out_image, out_transform = rasterio.mask.mask(src,coord,crop=True)
+                out_image, out_transform = mask(src,coord,crop=True)
                 out_meta = src.meta
                 out_meta.update({'driver':'GTiff', 
                                 'height':out_image.shape[1],

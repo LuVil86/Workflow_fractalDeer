@@ -12,21 +12,27 @@ import glob
 import os
 import numpy as np
 from rasterio.crs import CRS
-# *** INPUT PARAMETERS ***** 
+from rasterio.enums import Resampling
+# *** INPUT PARAMETERS ***** #
 
-tilePath = "/home/luvil/test_cleanPathway_fillHoles/ZN_tiles/"
+tileFolder = "/media/loreto/Grande/ie-ofev-24-25/csc_cerf_alps/summed_tuile_alps_model0"
+outFolder = "/media/loreto/Grande/ie-ofev-24-25/csc_cerf_alps/mosaic_alps_model0"
+outFile = os.path.join(outFolder, "mosaic_test.tif") 
 
-outFile = os.path.join('/home/luvil/test_cleanPathway_fillHoles/test_mosaic', "mosaic_test.tif") 
-
+# *************************** #
 
 if __name__=='__main__':
     print("******** CREATE MOSAIC FROM TILES *******\n")
-    print(f"folder with tiles : {tilePath}")
+    print(f"folder with tiles : {tileFolder}")
     print(f"output file name : {outFile}")
     print("*"*50)
+    
+    if not os.path.exists(outFolder):
+	    print("the specified output folder does not exists :: creating it")
+	    os.makedirs(outFolder)
     print("running merge function...")
-    mosaic, out_transform = merge(glob.glob(tilePath+"*.tif"), method="max")
-    print("--> mosaic done")
+    mosaic, out_transform = merge(glob.glob(tileFolder+"/"+"*.tif"), method="first", resampling=Resampling.bilinear)
+    print("--> mosaic done ! writing output...")
     #finArray = np.squeeze(mosaic, axis=0)
     # Copy the metadata
 
@@ -48,3 +54,4 @@ if __name__=='__main__':
             dest.write(mosaic[0,:,:],1)
     except:
         print("ERROR : there was an error writing mosaic... aborting script")
+    print(" >>>> SCRIPT COMPLETED")
