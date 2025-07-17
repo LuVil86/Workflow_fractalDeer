@@ -11,17 +11,13 @@ import rasterio
 import os
 import geopandas as gpd
 from rasterio.mask import mask
-#CScapeFolder="/media/loreto/Linux/colo_tiles_1/out_tiles" #projet coloplato
-#CScapeFolder="/media/loreto/Grande/ie-ofev-24-25/csc_cerf_plateau/tuile"#ie-ofev:cerf-plateau
+####### **** Input parameters ***** ########
 CScapeFolder="/home/loreto/Documents/tuile_0"
 
-#shpFolder="/media/loreto/Linux/colo_tiles_1/grille_20000"#projet coloplato
-#shpFolder="/media/loreto/Grande/ie-ofev-24-25/csc_cerf_plateau/grille_2000_plateau"#projet ie-ofev:cerf-plateau
-shpFolder="/media/loreto/Grande/ie-ofev-24-25/csc_cerf_alps/grille_3000_alps"#projet ie-ofev:cerf-plateau #test for value for barriers
+shpFolder="/media/loreto/Grande/ie-ofev-24-25/csc_cerf_alps/grille_3000_alps"
 
-#outFolder="/media/loreto/Linux/colo_tiles_1/cut_tiles"#projet ie-ofev:cerf-plateau
-#outFolder="/media/loreto/Grande/ie-ofev-24-25/csc_cerf_plateau/cut_tuile"#projet ie-ofev:cerf-plateau
-outFolder="/media/loreto/Grande/ie-ofev-24-25/csc_cerf_alps/cut_tuile_alps_model0"#projet ie-ofev:cerf-plateau #test for value for barriers
+outFolder="/media/loreto/Grande/ie-ofev-24-25/csc_cerf_alps/cut_tuile_alps_model0"
+###### *************************** #########
 
 if __name__=="__main__":
     print("******** CUT TILES FROM CIRCUITSCAPE OUTPUTS *******\n")
@@ -57,4 +53,4 @@ if __name__=="__main__":
             except:
                 print(f"WARNING : there was an error writing cut tile N°{tileNumber} : skipping this tile...")
                 continue
-            
+    print(" >>>> SCRIPT COMPLETED")
