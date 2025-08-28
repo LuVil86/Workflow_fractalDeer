@@ -12,11 +12,11 @@ import os
 import geopandas as gpd
 from rasterio.mask import mask
 ####### **** Input parameters ***** ########
-CScapeFolder="/home/loreto/Documents/tuile_0"
+CScapeFolder="/home/loreto/Documents/tuile_1"
 
 shpFolder="/media/loreto/Grande/ie-ofev-24-25/csc_cerf_alps/grille_3000_alps"
 
-outFolder="/media/loreto/Grande/ie-ofev-24-25/csc_cerf_alps/cut_tuile_alps_model0"
+outFolder="/media/loreto/Grande/ie-ofev-24-25/csc_cerf_alps/cut_tuile_alps_model1"
 ###### *************************** #########
 
 if __name__=="__main__":
