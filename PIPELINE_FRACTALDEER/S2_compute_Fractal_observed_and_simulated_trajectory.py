@@ -50,7 +50,7 @@ if __name__=="__main__":
         fileName=os.path.splitext(os.path.basename(sys.argv[1]))[0]
         animalTest=fileName.split("_")[0]
 
-        yearTest="_".join(fileName.split("_")[1:])
+        yearTest="_".join(fileName.split("_")[1:3])
         print(f" deer : {animalTest} -- deerYear : {yearTest}")
 
 

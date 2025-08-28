@@ -38,13 +38,13 @@ resultFolder="~/Documents/hepiaBy24/IE-OFEV-24-25/"
 
 #### **** ICI  copier le contenu de la colonne "fullPath" de la ligne de stepSize à analyser ***** #####
 
-fullPath="~/Documents/hepiaBy24/IE-OFEV-24-25/grande/cerf_mouvement_patterns/jura_selected/compliqué/OUT_myrtille_deerYear_2013-2014/myrtille_deerYear_2013-2014_stepSize_2075_autocorrelation_timeSeriesKmeans_2_classes.csv"
+fullPath="~/OUT_violette_deerYear_2013-2014/violette_deerYear_2013-2014_stepSize_1309_autocorrelation_timeSeriesKmeans_2_classes.csv"
 
 
 
 #### *** ICI la mesure à prendre en compte : "ratio_endNSD", "ratio_meanNSD" ou "ratio_cumulativeNSD" ***** #######
-#parameter="ratio_meanNSD"
-parameter="ratio_endNSD"
+parameter="ratio_meanNSD"
+#parameter="ratio_endNSD"
 #parameter="ratio_cumulativeNSD"
 
 ################################################################################################################################
