@@ -12,11 +12,11 @@ from pathlib import Path
 
 ####### parameters ############
 
-rasterPath="/media/loreto/Grande/ie-ofev-24-25/ssf_alps/ssf_raster/output/resistance_cerf_alps_16_juil_25_clip.tif"
+rasterPath="/media/loreto/Grande/ie-ofev-24-25/ssf_alps/ssf_raster/output/resistance_cerf_alps_09_sep_25_model21_clip.tif"
 
-CScapeOutPath="/home/loreto/Documents/tuile_1"
+CScapeOutPath="/media/loreto/Grande/ie-ofev-24-25/csc_cerf_alps/tuile_21_test_vs"
 
-tiles = pd.read_csv('/media/loreto/Grande/ie-ofev-24-25/csc_cerf_alps/grille/grille_3000_alps.csv')
+tiles = pd.read_csv('/media/loreto/Grande/ie-ofev-24-25/csc_cerf_alps/grille/grille_3000_alps_valais.csv')
 
 percentBuffer=100
 tileSize=(3000,3000)
@@ -221,8 +221,8 @@ if __name__ == "__main__":
                                 rowStart=splitCoordsYStart[j]
                                 rowStop=splitCoordsYStop[j]+1
 
-                                if (rowStart-padding<0 or colStart-padding<0 or colStop+padding>ncol or rowStop+padding>nrow): 
-									print(f"the tile {k} is a border tile : no computation required")
+                                if (rowStart-padding<0 or colStart-padding<0 or colStop+padding>ncol or rowStop+padding>nrow):
+                                    print(f"the tile {k} is a border tile : no computation required")
                                     continue
                                 
                                

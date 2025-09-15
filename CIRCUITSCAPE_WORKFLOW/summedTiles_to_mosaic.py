@@ -15,9 +15,9 @@ from rasterio.crs import CRS
 from rasterio.enums import Resampling
 # *** INPUT PARAMETERS ***** #
 
-tileFolder = "/media/loreto/Grande/ie-ofev-24-25/csc_cerf_alps/summed_tuile_alps_model1"
-outFolder = "/media/loreto/Grande/ie-ofev-24-25/csc_cerf_alps/mosaic_alps_model1"
-outFile = os.path.join(outFolder, "mosaic_test.tif") 
+tileFolder = "/media/loreto/Grande/ie-ofev-24-25/csc_cerf_alps/summed_tuile_21_test_vs"
+outFolder = "/media/loreto/Grande/ie-ofev-24-25/csc_cerf_alps/mosaic_21_test_vs"
+outFile = os.path.join(outFolder, "mosaic_21_test_vs.tif") 
 
 # *************************** #
 
