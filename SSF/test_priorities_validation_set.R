@@ -57,7 +57,7 @@ source("./create_random_steps_along_paths_by_behaviour.R")
 behaviourFolder="/media/luvil/NAS_DEVELOPPEMENT/IE_OFEV/valais_selected/Bimodal"
 
 
-priority<-terra::rast("/media/luvil/NAS_DEVELOPPEMENT/IE_OFEV/Priorities/Prio_cerf_alpes20A_250915.tif")
+priority<-terra::rast("/media/luvil/NAS_DEVELOPPEMENT/IE_OFEV/csc_cerf_alps/mosaic_20A_test_vs/mosaic_20A_test_vs.tif")
 
 ### Create random steps along paths if chosenBehaviour="in-matrix" then long and directed displacements else if chosenBehaviour="in-habitat" then short and tortuous displacements ###
 
@@ -81,17 +81,23 @@ rm(output)
 ### - also reindex step_IDs to join every animal trajectories sequentially #####
 rndSteps$Loc<-as.integer(rndSteps$case_)
 rndSteps$step_id_<-as.integer(rndSteps$step_id_)
-newStepID<-c(1)
+
+
+
+newStepID<-rep(NA, nrow(rndSteps))
 stepIDNo<-1
+newStepID[1]<-stepIDNo
 for(i in 2:nrow(rndSteps)){
   if(rndSteps$step_id_[i-1]!=rndSteps$step_id_[i]){
     stepIDNo<-stepIDNo+1
   }
-  newStepID<-c(newStepID, stepIDNo)
+  newStepID[i]<-stepIDNo
 }
 rndSteps$new_step_id_<-newStepID
 rm(newStepID)
 rndSteps$numeric_animalID<-as.numeric(as.factor(rndSteps$animalID))
+
+
 
 
 ### scaling values of step length and turning angle
@@ -101,13 +107,15 @@ rndSteps$ta_<-scale(rndSteps$ta_)
 rndSteps<-rndSteps%>%filter(!is.na(rndSteps$x2_))
 
 
-rndSteps$priority<-extractCovariates(priority,rndSteps, covarExtractionType = "end") ###corClass is a function to add at the beginning of the script
+rndSteps$priority<-extractCovariates(priority,rndSteps, covarExtractionType = "end") 
+
+ggplot(aes(x=animalID,y=priority, fill=case_), data=rndSteps)+
+  geom_boxplot()+
+  theme_bw()+
+  theme(axis.text.x=element_text(angle=45, vjust=1, hjust=1), legend.position="none")
 
 
-## see used and available ##
-t_use<-table(rndSteps$animalID[rndSteps$Loc==1], rndSteps$landUse[rndSteps$Loc==1])
-t_avail<-table(rndSteps$animalID[rndSteps$Loc==0], rndSteps$landUse[rndSteps$Loc==0])
-print(" ####### USED HABITATS ######")
-print(t_use)
-print(" \n####### AVAILABLE HABITATS ######")
-print(t_avail)
+
+issfPrio<-amt::fit_issf(Loc~-1+priority+strata(new_step_id_), data=rndSteps)
+summary(issfPrio)
+summISSFpriority<-as.data.frame(broom::tidy(issfPrio$model, conf.int=TRUE))

@@ -17,14 +17,13 @@ create_random_step_along_path_by_behaviour<-function(behaviourFile=character(), 
     mutate(deerYear=factor(deerYear))%>%
     mutate(saison=factor(saison))%>%
     mutate(behaviour=factor(behaviour))%>%
-    mutate(jourNuit=factor(jourNuit))%>%#if new cerfs IE-OFEV
-    mutate(jura=factor(jura))#if cerfs jura
+    mutate(jourNuit=factor(jourNuit))
   # mutate(jourNuit=factor(tod))#if cerfs from article FractalDeer
   suppressWarnings(datCerf<-datCerf%>%transform(saison = forcats::fct_relevel(saison, c("Mars-Mai","Juin-Aout","Septembre-Novembre","Decembre-Fevrier"))))
   var1<-"mc_1"
   datCerf<- datCerf%>%mutate(behaviour=ifelse(behaviour==var1,"in-patch", "in-matrix"))%>%
     mutate(behaviour=factor(behaviour))%>%
-    dplyr::select(c("path_no", "x", "y","t","saison", "jourNuit","deerYear","behaviour"))
+    dplyr::select(c("id","path_no", "x", "y","t","saison", "jourNuit","deerYear","behaviour"))
   print(datCerf%>%tabyl(behaviour))
   
 
