@@ -176,10 +176,15 @@ def denoisePipeline(gdf,netSpeed=True,angle_sharpness=-0.6, netNext_multiplier=4
     ## then check if the length of the net displacement to reach the point with sharp angle is high
     #sharpHigh=sharp2.loc[(sharp2.netCurrentPoint>=maxSpeed)].reset_index(drop=True)
     #sharp3=sharp2.loc[(sharp2.ratioNetNextPoint>netNext_multiplier) ].reset_index(drop=True)
-    print(f"""  number of points on the original dataset : {len(gdf)}
+    print(f"""
+    #########################################################
+    number of points on the original dataset : {len(gdf)}
     number of sharp angles detected : {len(sharp)}
     number of sharp angles with  netDist bigger than {maxSpeed} from previous point :{len(sharp2)}
-    number of points removed : {len(sharpHigh)}
+    number of points with ratio vertex above {net2Points_Multiplier} : {len(sharpHigh)}
+    ====> NUMBER OF POINTS REMOVED : {len(sharpHigh)} <=====
+     #########################################################
+     
     """)
     if len(sharpHigh)>0:
         indexToRemove=[i+2 for i in sharpHigh.pointIndex]
@@ -188,13 +193,14 @@ def denoisePipeline(gdf,netSpeed=True,angle_sharpness=-0.6, netNext_multiplier=4
         gdf_denoised=gdf.drop(gdf.index[indexToRemove]).reset_index()
         gdf_denoised.rename({"index":f"indFilt_{filterIndex}"},axis=1, inplace=True)
         print(f" --> number of points after denoising : {len(gdf_denoised)}")
+
     else:
         print("no problematic points were detected with the provided parameters")
-        return(gdf)
+        return [gdf,0]
 
     
     if "level_0" in gdf_denoised.columns:
-        return gdf_denoised.drop(["level_0"], axis=1)
+        return [gdf_denoised.drop(["level_0"], axis=1), len(sharpHigh)]
     else:
-        return gdf_denoised
+        return [gdf_denoised,len(sharpHigh)]
 

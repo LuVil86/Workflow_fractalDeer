@@ -38,7 +38,13 @@ if(!require(stringr)) {
 
 #### **** ICI  copier le contenu de la colonne "fullPath" de la ligne de stepSize à analyser ***** #####
 
-fullPath="/media/loreto/Grande/ie-ofev-24-25/cerf_valais/Traité/OUT_ID199_deerYear_2020-2021/ID199_deerYear_2020-2021_stepSize_594_autocorrelation_timeSeriesKmeans_2_classes.csv"
+
+
+fullPath="/media/loreto/Grande/ie-ofev-24-25/cerf_movement_patterns/jura_selected/No_significant_chisq/OUT_mylla_deerYear_2013-2014/mylla_deerYear_2013-2014_stepSize_1229_autocorrelation_timeSeriesKmeans_2_classes.csv"
+
+
+
+
 
 #### *** ICI la mesure à prendre en compte : "ratio_endNSD", "ratio_meanNSD" ou "ratio_cumulativeNSD" ***** #######
 parameter="ratio_meanNSD"
