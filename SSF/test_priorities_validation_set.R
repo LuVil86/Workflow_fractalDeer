@@ -52,18 +52,90 @@ extractCovariates<-function(raster, dfLoc, covarExtractionType="begin-end"){
   return(x)
 }
 
-############# create random steps along paths by behaviour for many animals ############# 
-source("./create_random_steps_along_paths_by_behaviour.R")
-behaviourFolder="/media/luvil/NAS_DEVELOPPEMENT/IE_OFEV/valais_selected/Bimodal"
+
+#######################################################################################
+###### **** EXTRACT CURRENT VALUES FROM GPS FIXES ***** ###############################
+#######################################################################################
 
 
-###
+### NOTE : the current values are transformed in 1-100th quantiles to standardize the different models in order to compare them
+
+######
+
+### load GPS data #####
+if(exists("output")){rm(output)}
+output<-list()
+for(f in list.files(path=behaviourFolder,full.names = TRUE,pattern=".csv")){
+  cat("\n***********************************\n")
+  print(f)
+  cat("**************************************\n")
+  output[[f]]<-readr::read_csv(f)%>%
+    mutate(behaviour=ifelse(behaviour=="mc_1","in-patch", "in-matrix"))%>%
+    filter(behaviour%in%c("in-matrix"))
+}
+
+obsPoints<-vect(do.call(rbind,output), geom=c("x", "y"),crs="epsg:2056")
+
+
+### create mask for Switzerland only #####
 prio<-rast("/media/luvil/NAS_DEVELOPPEMENT/IE_OFEV/Priorities/Prio_cerf_alpes20A_250915_10NB.tif")
 CHMask<-ifel(prio>=0,1,NA )
 
 
 
-### Create random steps along paths if chosenBehaviour="in-matrix" then long and directed displacements else if chosenBehaviour="in-habitat" then short and tortuous displacements ###
+### load and extract current values ####
+qStep=0.01
+current<-terra::rast("/media/luvil/NAS_DEVELOPPEMENT/IE_OFEV/csc_cerf_alps/mosaic_20A_test_vs/mosaic_20A_test_vs.tif")
+current_masked<-mask(current, CHMask)
+classVect<- global(current_masked, quantile, probs=seq(0, 1, by=qStep), na.rm=T)
+currQuant<-classify(current_masked, t(as.matrix(classVect)))
+obsPoints$current<-as.numeric(terra::extract(currQuant,obsPoints)[,2] )
+obsDF<-as.data.frame(obsPoints)
+g1<-ggplot(aes(y=current),data=obsDF)+
+  geom_boxplot()+
+  theme_bw()+
+  ggtitle("Model 20A")
+
+
+
+########
+current<-terra::rast("/media/luvil/NAS_DEVELOPPEMENT/IE_OFEV/csc_cerf_alps/mosaic_20B_test_vs/mosaic_20B_test_vs.tif")
+current_masked<-mask(current, CHMask)
+classVect<- global(current_masked, quantile, probs=seq(0, 1, by=qStep), na.rm=T)
+currQuant<-classify(current_masked, t(as.matrix(classVect)))
+obsPoints$current<-as.numeric(terra::extract(currQuant,obsPoints)[,2] )
+obsDF<-as.data.frame(obsPoints)
+g2<-ggplot(aes(y=current),data=obsDF)+
+  geom_boxplot()+
+  theme_bw()+
+  ggtitle("Model 20B")
+
+########
+current<-terra::rast("/media/luvil/NAS_DEVELOPPEMENT/IE_OFEV/csc_cerf_alps/mosaic_21_test_vs/mosaic_21_test_vs.tif")
+classVect<- global(current, quantile, probs=seq(0, 1, by=qStep), na.rm=T)
+currQuant<-classify(current, t(as.matrix(classVect)))
+obsPoints$current<-as.numeric(terra::extract(currQuant,obsPoints)[,2] )
+obsDF<-as.data.frame(obsPoints)
+g3<-ggplot(aes(y=current),data=obsDF)+
+  geom_boxplot()+
+  theme_bw()+
+  ggtitle("Model 21")
+
+
+
+#### boxplots for the threee models side-by-side
+grid.arrange(g1,g2,g3, nrow=1)
+
+
+############## **** RANDOM STEP VALIDATION TECHNIQUE ***** ############################
+### -NOTE : the creation of random steps are almost always in the vicinity of observed data,
+##          which "bias" the true availiability of current since the values obtained at random steps
+##          still fall in the corridors
+########################################################################################
+source("./create_random_steps_along_paths_by_behaviour.R")
+behaviourFolder="/media/luvil/NAS_DEVELOPPEMENT/IE_OFEV/valais_selected/Bimodal"
+
+
 
 if(exists("rndSteps")){rm(rndSteps)}
 if(exists("output")){rm(output)}
@@ -123,75 +195,6 @@ rndSteps$ta_<-scale(rndSteps$ta_)
 rndSteps<-rndSteps%>%filter(!is.na(rndSteps$x2_))
 
 writeVector(vect(rndSteps[,c("case_", "x2_", "y2_")], geom=c("x2_", "y2_"), crs="epsg:2056"), filename = "./Random_steps_projection.geojson", overwrite=T)
-
-
-
-#######################################################################################
-###### **** EXTRACT CURRENT VALUES FROM GPS FIXES ***** ###############################
-#######################################################################################
-
-
-### NOTE : the current values are transformed in 1-100th quantiles to standardize the different models in order to compare them
-
-######
-
-### load GPS data #####
-if(exists("output")){rm(output)}
-output<-list()
-for(f in list.files(path=behaviourFolder,full.names = TRUE,pattern=".csv")){
-  cat("\n***********************************\n")
-  print(f)
-  cat("**************************************\n")
-  output[[f]]<-readr::read_csv(f)%>%
-    mutate(behaviour=ifelse(behaviour=="mc_1","in-patch", "in-matrix"))%>%
-    filter(behaviour%in%c("in-matrix"))
-}
-
-obsPoints<-vect(do.call(rbind,output), geom=c("x", "y"),crs="epsg:2056")
-
-### load and extract current values ####
-qStep=0.01
-current<-terra::rast("/media/luvil/NAS_DEVELOPPEMENT/IE_OFEV/csc_cerf_alps/mosaic_20A_test_vs/mosaic_20A_test_vs.tif")
-current_masked<-mask(current, CHMask)
-classVect<- global(current_masked, quantile, probs=seq(0, 1, by=qStep), na.rm=T)
-currQuant<-classify(current_masked, t(as.matrix(classVect)))
-obsPoints$current<-as.numeric(terra::extract(currQuant,obsPoints)[,2] )
-obsDF<-as.data.frame(obsPoints)
-g1<-ggplot(aes(y=current),data=obsDF)+
-  geom_boxplot()+
-  theme_bw()+
-  ggtitle("Model 20A")
-
-
-
-########
-current<-terra::rast("/media/luvil/NAS_DEVELOPPEMENT/IE_OFEV/csc_cerf_alps/mosaic_20B_test_vs/mosaic_20B_test_vs.tif")
-current_masked<-mask(current, CHMask)
-classVect<- global(current_masked, quantile, probs=seq(0, 1, by=qStep), na.rm=T)
-currQuant<-classify(current_masked, t(as.matrix(classVect)))
-obsPoints$current<-as.numeric(terra::extract(currQuant,obsPoints)[,2] )
-obsDF<-as.data.frame(obsPoints)
-g2<-ggplot(aes(y=current),data=obsDF)+
-  geom_boxplot()+
-  theme_bw()+
-  ggtitle("Model 20B")
-
-########
-current<-terra::rast("/media/luvil/NAS_DEVELOPPEMENT/IE_OFEV/csc_cerf_alps/mosaic_21_test_vs/mosaic_21_test_vs.tif")
-classVect<- global(current, quantile, probs=seq(0, 1, by=qStep), na.rm=T)
-currQuant<-classify(current, t(as.matrix(classVect)))
-obsPoints$current<-as.numeric(terra::extract(currQuant,obsPoints)[,2] )
-obsDF<-as.data.frame(obsPoints)
-g3<-ggplot(aes(y=current),data=obsDF)+
-  geom_boxplot()+
-  theme_bw()+
-  ggtitle("Model 21")
-
-
-
-#### boxplots for the threee models side-by-side
-grid.arrange(g1,g2,g3, nrow=1)
-
 
 
 
