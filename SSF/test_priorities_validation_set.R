@@ -135,8 +135,6 @@ grid.arrange(g1,g2,g3, nrow=1)
 source("./create_random_steps_along_paths_by_behaviour.R")
 behaviourFolder="/media/luvil/NAS_DEVELOPPEMENT/IE_OFEV/valais_selected/Bimodal"
 
-
-
 if(exists("rndSteps")){rm(rndSteps)}
 if(exists("output")){rm(output)}
 output<-list()
