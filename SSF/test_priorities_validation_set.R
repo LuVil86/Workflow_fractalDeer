@@ -61,7 +61,7 @@ extractCovariates<-function(raster, dfLoc, covarExtractionType="begin-end"){
 ### NOTE : the current values are transformed in 1-100th quantiles to standardize the different models in order to compare them
 
 ######
-
+behaviourFolder="/media/luvil/NAS_DEVELOPPEMENT/IE_OFEV/valais_selected/Bimodal/"
 ### load GPS data #####
 if(exists("output")){rm(output)}
 output<-list()
@@ -81,18 +81,19 @@ obsPoints<-vect(do.call(rbind,output), geom=c("x", "y"),crs="epsg:2056")
 prio<-rast("/media/luvil/NAS_DEVELOPPEMENT/IE_OFEV/Priorities/Prio_cerf_alpes20A_250915_10NB.tif")
 CHMask<-ifel(prio>=0,1,NA )
 
+qStep=0.1
 
 
 ### load and extract current values ####
-qStep=0.01
 current<-terra::rast("/media/luvil/NAS_DEVELOPPEMENT/IE_OFEV/csc_cerf_alps/mosaic_20A_test_vs/mosaic_20A_test_vs.tif")
 current_masked<-mask(current, CHMask)
 classVect<- global(current_masked, quantile, probs=seq(0, 1, by=qStep), na.rm=T)
 currQuant<-classify(current_masked, t(as.matrix(classVect)))
 obsPoints$current<-as.numeric(terra::extract(currQuant,obsPoints)[,2] )
-obsDF<-as.data.frame(obsPoints)
-g1<-ggplot(aes(y=current),data=obsDF)+
-  geom_boxplot()+
+obsDF<-melt(obsPoints$current, value.name="current_quantile", na.rm = T)
+obsDF$model<-"20A"
+g1<-ggplot(aes(x=model,y=as.factor(current_quantile)),data=obsDF)+
+  geom_jitter(col="firebrick1")+
   theme_bw()+
   ggtitle("Model 20A")
 
@@ -104,9 +105,10 @@ current_masked<-mask(current, CHMask)
 classVect<- global(current_masked, quantile, probs=seq(0, 1, by=qStep), na.rm=T)
 currQuant<-classify(current_masked, t(as.matrix(classVect)))
 obsPoints$current<-as.numeric(terra::extract(currQuant,obsPoints)[,2] )
-obsDF<-as.data.frame(obsPoints)
-g2<-ggplot(aes(y=current),data=obsDF)+
-  geom_boxplot()+
+obsDF<-melt(obsPoints$current, value.name="current_quantile", na.rm = T)
+obsDF$model<-"20B"
+g2<-ggplot(aes(x=model,y=as.factor(current_quantile)),data=obsDF)+
+  geom_jitter(col="chartreuse2")+
   theme_bw()+
   ggtitle("Model 20B")
 
@@ -115,16 +117,133 @@ current<-terra::rast("/media/luvil/NAS_DEVELOPPEMENT/IE_OFEV/csc_cerf_alps/mosai
 classVect<- global(current, quantile, probs=seq(0, 1, by=qStep), na.rm=T)
 currQuant<-classify(current, t(as.matrix(classVect)))
 obsPoints$current<-as.numeric(terra::extract(currQuant,obsPoints)[,2] )
-obsDF<-as.data.frame(obsPoints)
-g3<-ggplot(aes(y=current),data=obsDF)+
-  geom_boxplot()+
+obsDF<-melt(obsPoints$current, value.name="current_quantile", na.rm = T)
+obsDF$model<-"21"
+g3<-ggplot(aes(x=model,y=as.factor(current_quantile)),data=obsDF)+
+  geom_jitter(col="lightblue")+
   theme_bw()+
   ggtitle("Model 21")
 
 
-
 #### boxplots for the threee models side-by-side
 grid.arrange(g1,g2,g3, nrow=1)
+
+
+
+##########################3
+
+qStep=0.01
+### load and extract current values ####
+priority<-terra::rast("/media/luvil/NAS_DEVELOPPEMENT/IE_OFEV/Priorities/Prio_cerf_alpes20A_250915.tif")
+classVect<- global(priority, quantile, probs=seq(0, 1, by=qStep), na.rm=T)
+quantPrio<-classify(priority, t(as.matrix(classVect)), include.lowest=TRUE)
+obsPoints$priority<-as.numeric(as.factor(terra::extract(quantPrio,obsPoints)[,2]))
+obsDF<-melt(obsPoints$priority, value.name="priority_values", na.rm = T)
+obsDF$model<-"20A"
+p1<-ggplot(aes(x=model,y=as.factor(priority_values)),data=obsDF)+
+  geom_jitter(col="lightblue")+
+  theme_bw()+
+  scale_y_discrete(limits=factor(c(1:10)))+
+  ggtitle("Model 20A")
+
+### load and extract current values ####
+priority<-terra::rast("/media/luvil/NAS_DEVELOPPEMENT/IE_OFEV/Priorities/Prio_cerf_alpes20B_250915.tif")
+classVect<- global(priority, quantile, probs=seq(0, 1, by=qStep), na.rm=T)
+quantPrio<-classify(priority, t(as.matrix(classVect)), include.lowest=TRUE)
+obsPoints$priority<-as.numeric(as.factor(terra::extract(quantPrio,obsPoints)[,2]))
+obsDF<-melt(obsPoints$priority, value.name="priority_values", na.rm = T)
+obsDF$model<-"20B"
+p2<-ggplot(aes(x=model,y=as.factor(priority_values)),data=obsDF)+
+  geom_jitter(col="chartreuse2")+
+  theme_bw()+
+  scale_y_discrete(limits=factor(c(1:10)))+
+  ggtitle("Model 20B")
+
+
+
+### load and extract current values ####
+priority<-terra::rast("/media/luvil/NAS_DEVELOPPEMENT/IE_OFEV/Priorities/Prio_cerf_alpes21_250915.tif")
+classVect<- global(priority, quantile, probs=seq(0, 1, by=qStep), na.rm=T)
+quantPrio<-classify(priority, t(as.matrix(classVect)), include.lowest=TRUE)
+obsPoints$priority<-as.numeric(as.factor(terra::extract(quantPrio,obsPoints)[,2]))
+obsDF<-melt(obsPoints$priority, value.name="priority_values", na.rm = T)
+obsDF$model<-"21"
+p3<-ggplot(aes(x=model,y=as.factor(priority_values)),data=obsDF)+
+  geom_jitter(col="firebrick1")+
+  theme_bw()+
+  scale_y_discrete(limits=factor(c(1:10)))+
+  ggtitle("Model 21")
+
+grid.arrange(p1,p2,p3, nrow=1)
+
+
+############## **** KERNEL TECHNIQUE ***** ############################
+### -NOTE : the idea is to use the kernel density of GPS fixes for a given animal
+# and use it as a "weighted probability" raster to sample points which would constitue the "available" space
+
+########################################################################################
+
+
+### this is an example for a single animal
+library(move)
+library(adehabitatHR)
+library(raster)
+library(spatialEco)
+
+
+tmp<-readr::read_csv("/media/luvil/NAS_DEVELOPPEMENT/IE_OFEV/valais_selected/Bimodal/ID003 deerYear 2018-2019 stepSize 980 autocorrelation timeSeriesKmeans 2 classes REFINED RATIO_MEANNSD.csv")%>%
+  mutate(behaviour=ifelse(behaviour=="mc_1","in-patch", "in-matrix"))
+obsTraj<-move(x=tmp$x, y=tmp$y, time=tmp$t,proj = CRS("epsg:2056"))
+
+
+### need to use the "sp" package for kernelUD 
+coordinates(tmp) <- c("x", "y")
+proj4string(tmp) <- CRS("epsg:2056")
+
+### the raster of priorities has to be cropped to the extend and readable as "grid" for kernelUD
+priorityRAST<-raster("/media/luvil/NAS_DEVELOPPEMENT/IE_OFEV/Priorities/Prio_cerf_alpes21_250915.tif")
+trim<-crop(priorityRAST, extent(tmp)) ### crop to the extent
+spDF<-as(trim, "SpatialPixels")
+kern<-kernelUD(tmp, grid=spDF)
+
+## retransform in "terra" format
+kern2<-rast(as(kern, "SpatialPixelsDataFrame"))
+
+#### classify in quantiles to create weights
+qStep=0.01
+qtVect<- global(kern2, quantile, probs=seq(0, 1, by=qStep), na.rm=T)
+qt<-classify(kern2, t(as.matrix(qtVect)), include.lowest=TRUE)
+poids<-raster.invert(qt/100)
+
+### sample from weights
+hs<-res(poids)/2
+ptscell = sample(1:ncell(poids), 1000, prob=poids[], replace=TRUE)
+centres = xyFromCell(poids,ptscell)
+pts = cbind(runif(nrow(centres),centres[,1]-hs[1],centres[,1]+hs[1]),runif(nrow(centres),centres[,2]-hs[2],centres[,2]+hs[2]))
+
+### display the results (for display purposes only)
+plot(poids)
+points(pts)
+plot(obsTraj, add=T)
+
+
+##### extract values
+
+sampleValues<-extract(trim, pts)
+tmp_inMatrix<-subset(tmp, tmp$behaviour=="in-matrix")
+obsValues<-extract(trim,tmp_inMatrix )
+
+#### plot the result (boxplots) #####
+
+DF_for_plot<-data.frame(type=c(rep("obs",length(obsValues)), rep("rnd", length(sampleValues))), 
+                               value = c(obsValues, sampleValues))
+
+ggplot(aes(x=type, y=value),data=DF_for_plot)+geom_boxplot()+theme_bw()+ggtitle("priority values : observed VS random")+xlab("priority value")
+t.test(value~type, data=DF_for_plot)
+
+### write the example (for display purposes only)
+writeRaster(poids, filename = "test_weighted_raster.tif", overwrite=T)
+writeVector(vect(pts), filename = "test_sample_weighted.shp",overwrite=T)
 
 
 ############## **** RANDOM STEP VALIDATION TECHNIQUE ***** ############################
