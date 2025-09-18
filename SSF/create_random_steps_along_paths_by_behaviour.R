@@ -28,7 +28,7 @@ create_random_step_along_path_by_behaviour<-function(behaviourFile=character(), 
   
 
   datCerfSub<-datCerf%>%
-    filter(behaviour==chosenBehaviour)%>%
+    filter(behaviour%in%chosenBehaviour)%>%
     droplevels() 
   
     datPath<-datCerfSub%>%

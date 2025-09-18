@@ -57,7 +57,11 @@ source("./create_random_steps_along_paths_by_behaviour.R")
 behaviourFolder="/media/luvil/NAS_DEVELOPPEMENT/IE_OFEV/valais_selected/Bimodal"
 
 
-priority<-terra::rast("/media/luvil/NAS_DEVELOPPEMENT/IE_OFEV/csc_cerf_alps/mosaic_20A_test_vs/mosaic_20A_test_vs.tif")
+###
+prio<-rast("/media/luvil/NAS_DEVELOPPEMENT/IE_OFEV/Priorities/Prio_cerf_alpes20A_250915_10NB.tif")
+CHMask<-ifel(prio>=0,1,NA )
+
+
 
 ### Create random steps along paths if chosenBehaviour="in-matrix" then long and directed displacements else if chosenBehaviour="in-habitat" then short and tortuous displacements ###
 
@@ -69,10 +73,24 @@ for(f in list.files(path=behaviourFolder,full.names = TRUE,pattern=".csv")){
   print(f)
   cat("**************************************\n")
   output[[f]]<-create_random_step_along_path_by_behaviour(behaviourFile = f, chosenBehaviour="in-matrix",
-                                                          nbRandom=100)
+                                                          nbRandom=10)
   
 }
 rndSteps<-do.call(rbind,output)
+
+
+
+if(exists("rndSteps")){rm(rndSteps)}
+if(exists("output")){rm(output)}
+output<-list()
+for(f in list.files(path=behaviourFolder,full.names = TRUE,pattern=".csv")){
+  cat("\n***********************************\n")
+  print(f)
+  cat("**************************************\n")
+  output[[f]]<-read.csv(f, h=T)%>%filter(behaviour%in%"in-matrix")
+}
+
+obsPoints<-do.call(rbind,output)
 
 ### remove output after calculation because it is not needed after ###
 rm(output)
@@ -81,8 +99,6 @@ rm(output)
 ### - also reindex step_IDs to join every animal trajectories sequentially #####
 rndSteps$Loc<-as.integer(rndSteps$case_)
 rndSteps$step_id_<-as.integer(rndSteps$step_id_)
-
-
 
 newStepID<-rep(NA, nrow(rndSteps))
 stepIDNo<-1
@@ -106,16 +122,88 @@ rndSteps$ta_<-scale(rndSteps$ta_)
 ### eliminating values at final coordinate of steps
 rndSteps<-rndSteps%>%filter(!is.na(rndSteps$x2_))
 
+writeVector(vect(rndSteps[,c("case_", "x2_", "y2_")], geom=c("x2_", "y2_"), crs="epsg:2056"), filename = "./Random_steps_projection.geojson", overwrite=T)
 
-rndSteps$priority<-extractCovariates(priority,rndSteps, covarExtractionType = "end") 
 
-ggplot(aes(x=animalID,y=priority, fill=case_), data=rndSteps)+
+
+#######################################################################################
+###### **** EXTRACT CURRENT VALUES FROM GPS FIXES ***** ###############################
+#######################################################################################
+
+
+### NOTE : the current values are transformed in 1-100th quantiles to standardize the different models in order to compare them
+
+######
+
+### load GPS data #####
+if(exists("output")){rm(output)}
+output<-list()
+for(f in list.files(path=behaviourFolder,full.names = TRUE,pattern=".csv")){
+  cat("\n***********************************\n")
+  print(f)
+  cat("**************************************\n")
+  output[[f]]<-readr::read_csv(f)%>%
+    mutate(behaviour=ifelse(behaviour=="mc_1","in-patch", "in-matrix"))%>%
+    filter(behaviour%in%c("in-matrix"))
+}
+
+obsPoints<-vect(do.call(rbind,output), geom=c("x", "y"),crs="epsg:2056")
+
+### load and extract current values ####
+qStep=0.01
+current<-terra::rast("/media/luvil/NAS_DEVELOPPEMENT/IE_OFEV/csc_cerf_alps/mosaic_20A_test_vs/mosaic_20A_test_vs.tif")
+current_masked<-mask(current, CHMask)
+classVect<- global(current_masked, quantile, probs=seq(0, 1, by=qStep), na.rm=T)
+currQuant<-classify(current_masked, t(as.matrix(classVect)))
+obsPoints$current<-as.numeric(terra::extract(currQuant,obsPoints)[,2] )
+obsDF<-as.data.frame(obsPoints)
+g1<-ggplot(aes(y=current),data=obsDF)+
   geom_boxplot()+
   theme_bw()+
-  theme(axis.text.x=element_text(angle=45, vjust=1, hjust=1), legend.position="none")
+  ggtitle("Model 20A")
 
 
 
-issfPrio<-amt::fit_issf(Loc~-1+priority+strata(new_step_id_), data=rndSteps)
-summary(issfPrio)
-summISSFpriority<-as.data.frame(broom::tidy(issfPrio$model, conf.int=TRUE))
+########
+current<-terra::rast("/media/luvil/NAS_DEVELOPPEMENT/IE_OFEV/csc_cerf_alps/mosaic_20B_test_vs/mosaic_20B_test_vs.tif")
+current_masked<-mask(current, CHMask)
+classVect<- global(current_masked, quantile, probs=seq(0, 1, by=qStep), na.rm=T)
+currQuant<-classify(current_masked, t(as.matrix(classVect)))
+obsPoints$current<-as.numeric(terra::extract(currQuant,obsPoints)[,2] )
+obsDF<-as.data.frame(obsPoints)
+g2<-ggplot(aes(y=current),data=obsDF)+
+  geom_boxplot()+
+  theme_bw()+
+  ggtitle("Model 20B")
+
+########
+current<-terra::rast("/media/luvil/NAS_DEVELOPPEMENT/IE_OFEV/csc_cerf_alps/mosaic_21_test_vs/mosaic_21_test_vs.tif")
+classVect<- global(current, quantile, probs=seq(0, 1, by=qStep), na.rm=T)
+currQuant<-classify(current, t(as.matrix(classVect)))
+obsPoints$current<-as.numeric(terra::extract(currQuant,obsPoints)[,2] )
+obsDF<-as.data.frame(obsPoints)
+g3<-ggplot(aes(y=current),data=obsDF)+
+  geom_boxplot()+
+  theme_bw()+
+  ggtitle("Model 21")
+
+
+
+#### boxplots for the threee models side-by-side
+grid.arrange(g1,g2,g3, nrow=1)
+
+
+
+
+############################# BIOMOD dev ###########################################################
+
+require(biomod2)
+bmData<-BIOMOD_FormatingData(resp.var=case_,
+                             expl.var = allRast,
+                             resp.xy=geom(allPoints)[,c("x", "y")],
+                             resp.name="habitat suitability",
+                             filter.raster = TRUE)
+
+#writeVector(obsPoints,filename="model_20A_quantile_obsPoints.geojson",overwrite=T)
+
+
