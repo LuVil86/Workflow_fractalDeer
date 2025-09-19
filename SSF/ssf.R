@@ -85,13 +85,15 @@ rm(output)
 ### - also reindex step_IDs to join every animal trajectories sequentially #####
 rndSteps$Loc<-as.integer(rndSteps$case_)
 rndSteps$step_id_<-as.integer(rndSteps$step_id_)
-newStepID<-c(1)
+
+newStepID<-rep(NA, nrow(rndSteps))
 stepIDNo<-1
+newStepID[1]<-stepIDNo
 for(i in 2:nrow(rndSteps)){
   if(rndSteps$step_id_[i-1]!=rndSteps$step_id_[i]){
     stepIDNo<-stepIDNo+1
   }
-  newStepID<-c(newStepID, stepIDNo)
+  newStepID[i]<-stepIDNo
 }
 rndSteps$new_step_id_<-newStepID
 rm(newStepID)
