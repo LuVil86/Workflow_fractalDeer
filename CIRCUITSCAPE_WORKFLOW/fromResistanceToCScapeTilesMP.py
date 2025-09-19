@@ -12,11 +12,11 @@ from pathlib import Path
 
 ####### parameters ############
 
-rasterPath="/media/loreto/Grande/ie-ofev-24-25/ssf_alps/ssf_raster/output/resistance_cerf_alps_09_sep_25_model21_clip.tif"
+rasterPath="/media/loreto/Grande/ie-ofev-24-25/ssf_jura/ssf_raster/output/resistance_cerf_jura_19_sep_25_model20_clip.tif"
 
-CScapeOutPath="/media/loreto/Grande/ie-ofev-24-25/csc_cerf_alps/tuile_21_test_vs"
+CScapeOutPath="/media/loreto/Grande/ie-ofev-24-25/csc_cerf_jura/tuile_20"
 
-tiles = pd.read_csv('/media/loreto/Grande/ie-ofev-24-25/csc_cerf_alps/grille/grille_3000_alps_valais.csv')
+tiles = pd.read_csv('/media/loreto/Grande/ie-ofev-24-25/csc_cerf_jura/grille/grille_3000_jura.csv')
 
 percentBuffer=100
 tileSize=(3000,3000)

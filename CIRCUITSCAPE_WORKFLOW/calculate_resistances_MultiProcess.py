@@ -58,18 +58,19 @@ if __name__=="__main__":
         
     habRasterPath='/media/loreto/Grande/ie-ofev-24-25/variables/habitat_cerf_for_resistances/HabitatMap_cerf_07juil25_for_resistances.tif'
     
-    habCoefs= pd.read_csv('/media/loreto/Grande/ie-ofev-24-25/ssf_alps/ssf_raster/unique_habitat_cerf_for_resistance_coef_20_model.csv')
+    habCoefs= pd.read_csv('/media/loreto/Grande/ie-ofev-24-25/ssf_jura/ssf_raster/unique_habitat_cerf_for_resistance_coef_22_model.csv')
     
-    enviCoeff={'/media/loreto/NAS_DEVELOPPEMENT/IE_OFEV/Variables/LogScaled/Alpes__Density_Buildings_100_opt2_scaled.tif':-0.3286893,
-               '/media/loreto/NAS_DEVELOPPEMENT/IE_OFEV/Variables/LogScaled/Alpes__Density_Merge_RoadPrimary__400_opt_scaled.tif':-0.221882,
-               '/media/loreto/NAS_DEVELOPPEMENT/IE_OFEV/Variables/LogScaled/Alpes__Density_Merge_RoadSecondary_50_opt_scaled.tif':-0.2880188,
-               '/media/loreto/NAS_DEVELOPPEMENT/IE_OFEV/Variables/LogScaled/Alpes__Density_Forest_100_opt2_scaled.tif':0.2642122,
-               '/media/loreto/NAS_DEVELOPPEMENT/IE_OFEV/Variables/LogScaled/Alpes__Dist_Merge_Bati_16b_scaled.tif':0.3108652,
-               '/media/loreto/NAS_DEVELOPPEMENT/IE_OFEV/Variables/LogScaled/Alpes__Dist_Merge_RoadPrimary_16b_scaled.tif':-0.2493425,
-               '/media/loreto/NAS_DEVELOPPEMENT/IE_OFEV/Variables/LogScaled/Alpes__Dist_Merge_Autobahn_16b_scaled.tif':0.0901117,
-               '/media/loreto/NAS_DEVELOPPEMENT/IE_OFEV/Variables/LogScaled/Alpes__Dist_Merge_RoadSecondary_250701_16b_scaled.tif':-0.1075671,
-               '/media/loreto/NAS_DEVELOPPEMENT/IE_OFEV/Variables/Scaled/Alpes__Exposition_5m_16b_scaled.tif':-0.0371773,
-               '/media/loreto/NAS_DEVELOPPEMENT/IE_OFEV/Variables/Scaled/Alpes__Slope_5m_8b_scaled.tif':-0.2402515
+    enviCoeff={'/media/loreto/NAS_DEVELOPPEMENT/IE_OFEV/Variables/LogScaled/Jura__Density_Buildings_100_opt2_scaled.tif':0.1569276,
+               '/media/loreto/NAS_DEVELOPPEMENT/IE_OFEV/Variables/LogScaled/Jura__Density_Merge_RoadPrimary__200_opt_scaled.tif':0.1541613,
+               '/media/loreto/NAS_DEVELOPPEMENT/IE_OFEV/Variables/LogScaled/Jura__Density_Merge_RoadSecondary_50_opt_scaled.tif':-0.3041774,
+               '/media/loreto/NAS_DEVELOPPEMENT/IE_OFEV/Variables/LogScaled/Jura__Density_Forest_400_opt2_scaled.tif':0.3176758,
+               '/media/loreto/NAS_DEVELOPPEMENT/IE_OFEV/Variables/LogScaled/Jura__Dist_Merge_Bati_16b_scaled.tif':0.1605695,
+               #'/media/loreto/NAS_DEVELOPPEMENT/IE_OFEV/Variables/LogScaled/Jura__Dist_Merge_RoadPrimary_16b_scaled.tif':0.0964482,
+               #'/media/loreto/NAS_DEVELOPPEMENT/IE_OFEV/Variables/LogScaled/Jura__Dist_Merge_Autobahn_16b_scaled.tif':0.0901117,
+               '/media/loreto/NAS_DEVELOPPEMENT/IE_OFEV/Variables/LogScaled/Jura__Dist_Merge_RoadSecondary_250701_16b_scaled.tif':-0.3298851,
+               '/media/loreto/NAS_DEVELOPPEMENT/IE_OFEV/Variables/Scaled/Jura__Altitude_5m_16b_scaled.tif':0.3157216,
+               '/media/loreto/NAS_DEVELOPPEMENT/IE_OFEV/Variables/Scaled/Jura__Exposition_5m_16b_scaled.tif':-0.0571324,
+               '/media/loreto/NAS_DEVELOPPEMENT/IE_OFEV/Variables/Scaled/Jura__Slope_5m_8b_scaled.tif':-0.2298444
                }
                      
                        
@@ -78,7 +79,7 @@ if __name__=="__main__":
         
         
         
-    outFile = '/media/loreto/Grande/ie-ofev-24-25/ssf_alps/ssf_raster/output/resistance_cerf_alps_09_sep_25_model21.tif'
+    outFile = '/media/loreto/Grande/ie-ofev-24-25/ssf_jura/ssf_raster/output/resistance_cerf_jura_19_sep_25_model20.tif'
     
     ############################################################################################3
         

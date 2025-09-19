@@ -12,11 +12,11 @@ import os
 import geopandas as gpd
 from rasterio.mask import mask
 ####### **** Input parameters ***** ########
-CScapeFolder="/media/loreto/Grande/ie-ofev-24-25/csc_cerf_alps/tuile_21_test_vs"
+CScapeFolder="/media/loreto/Grande/ie-ofev-24-25/csc_cerf_jura/tuile_20"
 
-shpFolder="/media/loreto/Grande/ie-ofev-24-25/csc_cerf_alps/grille_3000_alps_valais"
+shpFolder="/media/loreto/Grande/ie-ofev-24-25/csc_cerf_jura/grille_3000_jura"
 
-outFolder="/media/loreto/Grande/ie-ofev-24-25/csc_cerf_alps/cut_tuile_21_test_vs"
+outFolder="/media/loreto/Grande/ie-ofev-24-25/csc_cerf_jura/cut_tuile_20"
 ###### *************************** #########
 
 if __name__=="__main__":
@@ -37,6 +37,7 @@ if __name__=="__main__":
 
             print(f" corresponding shapefile : {shapeName}")
             coord=tileShape.geometry
+    
             
             with rasterio.open(os.path.join(CScapeFolder,file)) as src:
                 out_image, out_transform = mask(src,coord,crop=True)
