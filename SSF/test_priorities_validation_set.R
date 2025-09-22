@@ -55,7 +55,7 @@ extractCovariates<-function(raster, dfLoc, covarExtractionType="begin-end"){
 
 
 ###### create the data frame of observed points ######
-behaviourFolder="/media/loreto/NAS_DEVELOPPEMENT/IE_OFEV/valais_selected/Bimodal/"
+behaviourFolder="/media/luvil/NAS_DEVELOPPEMENT/IE_OFEV/valais_selected/Bimodal/"
 ### load GPS data #####
 if(exists("output")){rm(output)}
 output<-list()
@@ -79,9 +79,9 @@ CHMask<-ifel(prio>=0,1,NA )
 qStep=0.1
 
 
-#######################################################################################
-###### **** EXTRACT CURRENT VALUES FROM GPS FIXES ***** ###############################
-#######################################################################################
+###### ***** RAW COUNT TECHNIQUE ****** #############
+###### - extract current value from GPS fixes ###############################
+
 
 
 ### NOTE : the current values are transformed in 1-100th quantiles to standardize the different models in order to compare them
@@ -202,19 +202,26 @@ tmp<-readr::read_csv("/media/luvil/NAS_DEVELOPPEMENT/IE_OFEV/valais_selected/Bim
   mutate(behaviour=ifelse(behaviour=="mc_1","in-patch", "in-matrix"))
 obsTraj<-move(x=tmp$x, y=tmp$y, time=tmp$t,proj = CRS("epsg:2056"))
 
-
 ### need to use the "sp" package for kernelUD 
 coordinates(tmp) <- c("x", "y")
 proj4string(tmp) <- CRS("epsg:2056")
+tmp2<-tmp[,"id"]
 
+
+##### ** USE ONE OF THE RASTER TO CREATE KERNELUD
 ### the raster of priorities has to be cropped to the extend and readable as "grid" for kernelUD
-priorityRAST<-raster("/media/luvil/NAS_DEVELOPPEMENT/IE_OFEV/Priorities/Prio_cerf_alpes21_250915.tif")
-trim<-crop(priorityRAST, extent(tmp)) ### crop to the extent
-spDF<-as(trim, "SpatialPixels")
-kern<-kernelUD(tmp, grid=spDF)
+priorityRAST<-raster("/media/luvil/NAS_DEVELOPPEMENT/IE_OFEV/Priorities/Prio_cerf_alpes20A_250915.tif")
+trim<-crop(priorityRAST, extent(terra::buffer(tmp2,width=10000))) ### crop to the extent
 
-## retransform in "terra" format
-kern2<-rast(as(kern, "SpatialPixelsDataFrame"))
+### OPTIONAL : lower resolution to decrease computation time
+test<-raster::focal(trim,  w=matrix(1/25,nrow=5,ncol=5), fun="mean", na.rm=TRUE)
+test<-aggregate(test, fact = 5)
+
+### run kernelUD, re-transform in spatRAster
+spDF<-as(test, "SpatialPixels")
+kern<-kernelUD(tmp2, grid=spDF)
+kern2<-rast(estUDm2spixdf(kern))
+
 
 #### classify in quantiles to create weights
 qStep=0.01
@@ -222,31 +229,58 @@ qtVect<- global(kern2, quantile, probs=seq(0, 1, by=qStep), na.rm=T)
 qt<-classify(kern2, t(as.matrix(qtVect)), include.lowest=TRUE)
 poids<-raster.invert(qt/100)
 
+#### optional : limit the cells within the polygon mask of the 97.5% kernel UD
+#polyLimit<-getverticeshr(kern, percent = 99, unin="m", unout="m2")
+#poids_masked<-terra::mask(poids, polyLimit)
+
+
 ### sample from weights
 hs<-res(poids)/2
 ptscell = sample(1:ncell(poids), 1000, prob=poids[], replace=TRUE)
 centres = xyFromCell(poids,ptscell)
 pts = cbind(runif(nrow(centres),centres[,1]-hs[1],centres[,1]+hs[1]),runif(nrow(centres),centres[,2]-hs[2],centres[,2]+hs[2]))
 
+
+
+##### extract values from different rasters
+rasterList<-c("/media/luvil/NAS_DEVELOPPEMENT/IE_OFEV/Priorities/Prio_cerf_alpes20A_250915.tif",
+              "/media/luvil/NAS_DEVELOPPEMENT/IE_OFEV/Priorities/Prio_cerf_alpes20B_250915.tif",
+              "/media/luvil/NAS_DEVELOPPEMENT/IE_OFEV/Priorities/Prio_cerf_alpes21_250915.tif",
+              "/media/luvil/NAS_DEVELOPPEMENT/IE_OFEV/Cumulated_costs/CostDist_cerf_alpes20A_250910.tif",
+              "/media/luvil/NAS_DEVELOPPEMENT/IE_OFEV/Cumulated_costs/CostDist_cerf_alpes20B_250910.tif",
+              "/media/luvil/NAS_DEVELOPPEMENT/IE_OFEV/Cumulated_costs/CostDist_cerf_alpes21_250910.tif",
+              "/media/luvil/NAS_DEVELOPPEMENT/IE_OFEV/csc_cerf_alps/mosaic_20A_test_vs/mosaic_20A_test_vs.tif",
+              "/media/luvil/NAS_DEVELOPPEMENT/IE_OFEV/csc_cerf_alps/mosaic_20B_test_vs/mosaic_20B_test_vs.tif",
+              "/media/luvil/NAS_DEVELOPPEMENT/IE_OFEV/csc_cerf_alps/mosaic_21_test_vs/mosaic_21_test_vs.tif")
+titles<-c("prio20A", "prio20B","prio21", "cumCost20A", "cumCost20B","cumCost21", "current20A", "current20B", "current21")
+modelType<-c("prio", "prio","prio", "cumCost", "cumCost","cumCost", "current", "current", "current")
+ptsV<-vect(pts)
+tmpV<-vect(tmp)
+
+resList<-list()
+for(i in 1:length(rasterList)){
+  r<-terra::rast(rasterList[i])
+  sampleValues<-extract(r, ptsV)
+  tmp_inMatrix<-subset(tmpV, tmpV$behaviour=="in-matrix")
+  obsValues<-extract(r,tmp_inMatrix )
+  DF_for_plot<-data.frame(modelType= modelType[i], modelName=titles[i],type=c(rep("obs",nrow(obsValues)), rep("rnd", nrow(sampleValues))), 
+                          value = c(obsValues[,2], sampleValues[,2]))
+  resList[[rasterList[i]]]<-DF_for_plot
+}
+
+p1<-ggplot(aes(x=modelName, y=value,fill=type), data=do.call(rbind, resList[1:3]))+geom_boxplot()+facet_wrap(~modelType)+theme_bw()+theme(axis.title.x = element_blank())
+p2<-ggplot(aes(x=modelName, y=value,fill=type), data=do.call(rbind, resList[4:6]))+geom_boxplot()+facet_wrap(~modelType)+theme_bw()+theme(axis.title.x = element_blank())
+p3<-ggplot(aes(x=modelName, y=value,fill=type), data=do.call(rbind, resList[7:9]))+geom_boxplot()+facet_wrap(~modelType)+theme_bw()+theme(axis.title.x = element_blank())
+grid.arrange(p1,p2,p3, nrow=3)
+
+
+
+
+
 ### display the results (for display purposes only)
 plot(poids)
 points(pts)
 plot(obsTraj, add=T)
-
-
-##### extract values
-
-sampleValues<-extract(trim, pts)
-tmp_inMatrix<-subset(tmp, tmp$behaviour=="in-matrix")
-obsValues<-extract(trim,tmp_inMatrix )
-
-#### plot the result (boxplots) #####
-
-DF_for_plot<-data.frame(type=c(rep("obs",length(obsValues)), rep("rnd", length(sampleValues))), 
-                               value = c(obsValues, sampleValues))
-
-ggplot(aes(x=type, y=value),data=DF_for_plot)+geom_boxplot()+theme_bw()+ggtitle("priority values : observed VS random")+xlab("priority value")
-t.test(value~type, data=DF_for_plot)
 
 ### write the example (for display purposes only)
 writeRaster(poids, filename = "test_weighted_raster.tif", overwrite=T)
@@ -332,5 +366,291 @@ bmData<-BIOMOD_FormatingData(resp.var=case_,
                              filter.raster = TRUE)
 
 #writeVector(obsPoints,filename="model_20A_quantile_obsPoints.geojson",overwrite=T)
+
+
+
+
+
+
+
+
+
+
+################################## KERNEL METHODOLOGY FOR EVERY ANIMALS : MEAN VALUES OF RASTERS **** ################# ###############################
+behaviourFolder="/media/luvil/NAS_DEVELOPPEMENT/IE_OFEV/valais_selected/Bimodal/"
+extentRAST<-raster("/media/luvil/NAS_DEVELOPPEMENT/IE_OFEV/Priorities/Prio_cerf_alpes20A_250915.tif")
+test<-raster::focal(extentRAST,  w=matrix(1/25,nrow=5,ncol=5), fun="mean", na.rm=TRUE)
+test<-aggregate(test, fact = 5)
+
+##### extract values from different rasters
+rasterList<-c("/media/luvil/NAS_DEVELOPPEMENT/IE_OFEV/Priorities/Prio_cerf_alpes20A_250915.tif",
+              "/media/luvil/NAS_DEVELOPPEMENT/IE_OFEV/Priorities/Prio_cerf_alpes20B_250915.tif",
+              "/media/luvil/NAS_DEVELOPPEMENT/IE_OFEV/Priorities/Prio_cerf_alpes21_250915.tif",
+              "/media/luvil/NAS_DEVELOPPEMENT/IE_OFEV/Cumulated_costs/CostDist_cerf_alpes20A_250910.tif",
+              "/media/luvil/NAS_DEVELOPPEMENT/IE_OFEV/Cumulated_costs/CostDist_cerf_alpes20B_250910.tif",
+              "/media/luvil/NAS_DEVELOPPEMENT/IE_OFEV/Cumulated_costs/CostDist_cerf_alpes21_250910.tif",
+              "/media/luvil/NAS_DEVELOPPEMENT/IE_OFEV/csc_cerf_alps/mosaic_20A_test_vs/mosaic_20A_test_vs.tif",
+              "/media/luvil/NAS_DEVELOPPEMENT/IE_OFEV/csc_cerf_alps/mosaic_20B_test_vs/mosaic_20B_test_vs.tif",
+              "/media/luvil/NAS_DEVELOPPEMENT/IE_OFEV/csc_cerf_alps/mosaic_21_test_vs/mosaic_21_test_vs.tif")
+titles<-c("prio20A", "prio20B","prio21", "cumCost20A", "cumCost20B","cumCost21", "current20A", "current20B", "current21")
+modelType<-c("prio", "prio","prio", "cumCost", "cumCost","cumCost", "current", "current", "current")
+
+
+
+resList<-list()
+for(f in list.files(path=behaviourFolder,full.names = TRUE,pattern=".csv")){
+  cat("\n***********************************\n")
+  print(f)
+  cat("**************************************\n")
+
+tmp<-readr::read_csv(f, show_col_types = FALSE)%>%
+  mutate(behaviour=ifelse(behaviour=="mc_1","in-patch", "in-matrix"))
+
+animalID<-paste(unique(tmp$id)[1], unique(tmp$deerYear)[1], sep="_")
+
+
+### need to use the "sp" package for kernelUD 
+coordinates(tmp) <- c("x", "y")
+proj4string(tmp) <- CRS("epsg:2056")
+tmp2<-tmp[,"id"]
+
+trim<-crop(test, extent(terra::buffer(tmp2,width=5000))) ### crop to the extent
+spDF<-as(trim, "SpatialPixels")
+kern<-kernelUD(tmp2, grid=spDF)
+kern2<-rast(estUDm2spixdf(kern))
+
+
+#### classify in quantiles to create weights
+qStep=0.01
+qtVect<- global(kern2, quantile, probs=seq(0, 1, by=qStep), na.rm=T)
+qt<-classify(kern2, t(as.matrix(qtVect)), include.lowest=TRUE)
+poids<-raster.invert(qt/100)
+
+#### optional : limit the cells within the polygon mask of the 97.5% kernel UD
+#polyLimit<-getverticeshr(kern, percent = 99, unin="m", unout="m2")
+#poids_masked<-terra::mask(poids, polyLimit)
+
+
+### sample from weights
+hs<-res(poids)/2
+ptscell = sample(1:ncell(poids), 1000, prob=poids[], replace=TRUE)
+centres = xyFromCell(poids,ptscell)
+pts = cbind(runif(nrow(centres),centres[,1]-hs[1],centres[,1]+hs[1]),runif(nrow(centres),centres[,2]-hs[2],centres[,2]+hs[2]))
+
+
+
+ptsV<-vect(pts,crs="epsg:2056")
+tmpV<-vect(as.data.frame(tmp),geom=c("x","y"),crs="epsg:2056")
+
+animalList<-list()
+for(i in 1:length(rasterList)){
+  r<-terra::rast(rasterList[i])
+  sampleValues<-extract(r, ptsV)
+  tmp_inMatrix<-subset(tmpV, tmpV$behaviour=="in-matrix")
+  obsValues<-extract(r,tmp_inMatrix )
+  DF_animal<-data.frame(modelType= modelType[i], 
+                        modelName=titles[i],
+                        type=c("obs", "rnd"), 
+                          meanValue = c(mean(obsValues[,2], na.rm=TRUE), mean(sampleValues[,2], na.rm=TRUE))
+                  )
+  animalList[[rasterList[i]]]<-DF_animal
+}
+resList[[animalID]]<-do.call(rbind, animalList)
+}
+
+
+
+finDF<-do.call(rbind, resList)
+
+
+ggplot(aes(x=modelName, y=meanValue, fill=type), data=finDF[finDF$modelType=="prio",])+
+geom_boxplot()+
+ylab("Mean Priority Values")+
+theme_bw()+theme(axis.title.x = element_blank())
+
+
+ggplot(aes(x=modelName, y=meanValue, fill=type), data=finDF[finDF$modelType=="current",])+
+  geom_boxplot()+
+  ylab("Mean Current Values")+
+  theme_bw()+theme(axis.title.x = element_blank())
+
+
+
+ggplot(aes(x=modelName, y=meanValue, fill=type), data=finDF[finDF$modelType=="cumCost",])+
+  geom_boxplot()+
+  ylab("Mean Cumulated cost Values")+
+  theme_bw()+theme(axis.title.x = element_blank())
+
+t.test(meanValue~type, data=subset(finDF, finDF$modelType=="current" & finDF$modelName=="current20A"))
+t.test(meanValue~type, data=subset(finDF, finDF$modelType=="current" & finDF$modelName=="current20B"))
+t.test(meanValue~type, data=subset(finDF, finDF$modelType=="current" & finDF$modelName=="current21"))
+
+a1c<-aov(meanValue~type, data=subset(finDF, finDF$modelType=="current" & finDF$modelName=="current20A"))
+anova(aov(meanValue~type, data=subset(finDF, finDF$modelType=="current" & finDF$modelName=="current20B")))
+anova(aov(meanValue~type, data=subset(finDF, finDF$modelType=="current" & finDF$modelName=="current21")))
+
+
+t1p<-kruskal.test(meanValue~type, data=subset(finDF, finDF$modelType=="cumCost" & finDF$modelName=="cumCost20A"))
+t2p<-kruskal.test(meanValue~type, data=subset(finDF, finDF$modelType=="cumCost" & finDF$modelName=="cumCost20B"))
+t3p<-kruskal.test(meanValue~type, data=subset(finDF, finDF$modelType=="cumCost" & finDF$modelName=="cumCost21"))
+
+
+
+t1p<-kruskal.test(meanValue~type, data=subset(finDF, finDF$modelType=="prio" & finDF$modelName=="prio20A"))
+t2p<-kruskal.test(meanValue~type, data=subset(finDF, finDF$modelType=="prio" & finDF$modelName=="prio20B"))
+t3p<-wilcox.test(meanValue~type, data=subset(finDF, finDF$modelType=="prio" & finDF$modelName=="prio21"))
+
+
+a1<-aov(meanValue~type, data=subset(finDF, finDF$modelType=="prio" & finDF$modelName=="prio20A"))
+anova(aov(meanValue~type, data=subset(finDF, finDF$modelType=="prio" & finDF$modelName=="prio20B")))
+anova(aov(meanValue~type, data=subset(finDF, finDF$modelType=="prio" & finDF$modelName=="prio21")))
+
+
+
+
+
+
+
+
+################################## **** KERNEL METHODOLOGY FOR EVERY ANIMALS : PROPORTIONS OF POINTS IN DECILE RASTERS ***** ###############################
+
+
+modelMask<-rast("/media/luvil/NAS_DEVELOPPEMENT/IE_OFEV/Priorities/Prio_cerf_alpes20A_250915_10NB.tif")
+CHMask<-ifel(modelMask>=0,1,NA )
+rm(modelMask)
+
+
+behaviourFolder="/media/luvil/NAS_DEVELOPPEMENT/IE_OFEV/valais_selected/Bimodal/"
+extentRAST<-raster("/media/luvil/NAS_DEVELOPPEMENT/IE_OFEV/Priorities/Prio_cerf_alpes20A_250915.tif")
+test<-raster::focal(extentRAST,  w=matrix(1/25,nrow=5,ncol=5), fun="mean", na.rm=TRUE)
+test<-aggregate(test, fact = 5)
+
+##### extract values from different rasters
+"/media/luvil/NAS_DEVELOPPEMENT/IE_OFEV/Priorities/Prio_cerf_alpes20A_250915.tif",
+"/media/luvil/NAS_DEVELOPPEMENT/IE_OFEV/Priorities/Prio_cerf_alpes20B_250915.tif",
+"/media/luvil/NAS_DEVELOPPEMENT/IE_OFEV/Priorities/Prio_cerf_alpes21_250915.tif",
+"/media/luvil/NAS_DEVELOPPEMENT/IE_OFEV/Cumulated_costs/CostDist_cerf_alpes20A_250910.tif",
+"/media/luvil/NAS_DEVELOPPEMENT/IE_OFEV/Cumulated_costs/CostDist_cerf_alpes20B_250910.tif",
+"/media/luvil/NAS_DEVELOPPEMENT/IE_OFEV/Cumulated_costs/CostDist_cerf_alpes21_250910.tif",
+
+
+rasterList<-c(
+              "/media/luvil/NAS_DEVELOPPEMENT/IE_OFEV/csc_cerf_alps/mosaic_20A_test_vs/mosaic_20A_test_vs.tif",
+              "/media/luvil/NAS_DEVELOPPEMENT/IE_OFEV/csc_cerf_alps/mosaic_20B_test_vs/mosaic_20B_test_vs.tif",
+              "/media/luvil/NAS_DEVELOPPEMENT/IE_OFEV/csc_cerf_alps/mosaic_21_test_vs/mosaic_21_test_vs.tif")
+
+qQuant<-0.1
+quantRasterList<-list()
+ for(i in 1:length(rasterList)){
+   r<-terra::rast(rasterList[i])
+   r2<-crop(r, CHMask)
+   r_masked<-mask(r2, CHMask)
+   classVect<- global(r_masked, quantile,probs=seq(0, 1, by=qQuant), na.rm=T)
+  # classMat<-matrix(c(0,classVect[1:9],classVect[1:10]), ncol=2, byrow=T)
+   currQuant<-as.numeric(classify(r_masked, t(as.matrix(classVect)), include.lowest=T ))+1
+   
+   quantRasterList[[i]]<-currQuant
+ }
+
+"prio20A", "prio20B","prio21", "cumCost20A", "cumCost20B","cumCost21",
+"prio", "prio","prio", "cumCost", "cumCost","cumCost", 
+
+
+titles<-c( "current20A", "current20B", "current21")
+modelType<-c("current", "current", "current")
+
+
+
+resList<-list()
+for(f in list.files(path=behaviourFolder,full.names = TRUE,pattern=".csv")){
+  cat("\n***********************************\n")
+  print(f)
+  cat("**************************************\n")
+  
+  tmp<-readr::read_csv(f, show_col_types = FALSE)%>%
+    mutate(behaviour=ifelse(behaviour=="mc_1","in-patch", "in-matrix"))
+  
+  animalID<-paste(unique(tmp$id)[1], unique(tmp$deerYear)[1], sep="_")
+  
+  
+  ### need to use the "sp" package for kernelUD 
+  coordinates(tmp) <- c("x", "y")
+  proj4string(tmp) <- CRS("epsg:2056")
+  tmp2<-tmp[,"id"]
+  
+  trim<-crop(test, extent(terra::buffer(tmp2,width=5000))) ### crop to the extent
+  spDF<-as(trim, "SpatialPixels")
+  kern<-kernelUD(tmp2, grid=spDF)
+  kern2<-rast(estUDm2spixdf(kern))
+  
+  
+  #### classify in quantiles to create weights
+  qStep=0.01
+  qtVect<- global(kern2, quantile, probs=seq(0, 1, by=qStep), na.rm=T)
+  qt<-classify(kern2, t(as.matrix(qtVect)), include.lowest=TRUE)
+  poids<-raster.invert(qt/100)
+  
+  #### optional : limit the cells within the polygon mask of the 97.5% kernel UD
+  #polyLimit<-getverticeshr(kern, percent = 99, unin="m", unout="m2")
+  #poids_masked<-terra::mask(poids, polyLimit)
+  
+  
+  ### sample from weights
+  hs<-res(poids)/2
+  ptscell = sample(1:ncell(poids), 1000, prob=poids[], replace=TRUE)
+  centres = xyFromCell(poids,ptscell)
+  pts = cbind(runif(nrow(centres),centres[,1]-hs[1],centres[,1]+hs[1]),runif(nrow(centres),centres[,2]-hs[2],centres[,2]+hs[2]))
+  
+  
+  
+  ptsV<-vect(pts,crs="epsg:2056")
+  tmpV<-vect(as.data.frame(tmp),geom=c("x","y"),crs="epsg:2056")
+  
+  animalList<-list()
+  i<-1
+  for(r in quantRasterList){
+    sampleValues<-extract(r, ptsV)
+    tmp_inMatrix<-subset(tmpV, tmpV$behaviour=="in-matrix")
+    obsValues<-extract(r,tmp_inMatrix )
+    DF_animal_obs<-data.frame(modelType= modelType[i], 
+                          modelName=titles[i],
+                          type=c("obs"), 
+                           
+                            table(factor(as.numeric(obsValues[,2]), levels=factor(1:10))
+                            )
+                          
+    )
+    DF_animal_rnd<-data.frame(modelType= modelType[i], 
+                              modelName=titles[i],
+                              type=c("rnd"), 
+                              
+                              table(factor(as.numeric(sampleValues[,2]), levels=factor(1:10))
+                              )
+                              
+    )
+    DF_animal<-rbind(DF_animal_obs, DF_animal_rnd)
+    
+    animalList[[rasterList[i]]]<-DF_animal
+    i<-i+1
+  }
+  resList[[animalID]]<-do.call(rbind, animalList)
+}
+
+
+finDF_prop<-do.call(rbind, resList)
+
+ggplot(aes(x=Var1, y=Freq, fill=factor(type)), data=subset(finDF_prop, finDF_prop$modelType=="current") )+
+  geom_bar(stat = "identity",position=position_dodge(width = 1))+theme_bw()+
+  theme(axis.title.x = element_blank())+facet_wrap(~modelName)
+
+
+
+
+
+
+
+ggplot(aes(x=Var1, y=Freq, fill=factor(type)), data=subset(finDF_prop, finDF_prop$modelType=="prio") )+
+  geom_bar(stat = "identity",position=position_dodge(width = 1))+theme_bw()+
+  theme(axis.title.x = element_blank())+facet_wrap(~modelName)
 
 
