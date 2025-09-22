@@ -19,6 +19,7 @@ library(amt)
 library(psych)
 library(GGally)
 library(janitor)
+library(reshape2)
 #option R- function where "width" control de maximum number of columns
 options(width=150)
 
@@ -53,15 +54,8 @@ extractCovariates<-function(raster, dfLoc, covarExtractionType="begin-end"){
 }
 
 
-#######################################################################################
-###### **** EXTRACT CURRENT VALUES FROM GPS FIXES ***** ###############################
-#######################################################################################
-
-
-### NOTE : the current values are transformed in 1-100th quantiles to standardize the different models in order to compare them
-
-######
-behaviourFolder="/media/luvil/NAS_DEVELOPPEMENT/IE_OFEV/valais_selected/Bimodal/"
+###### create the data frame of observed points ######
+behaviourFolder="/media/loreto/NAS_DEVELOPPEMENT/IE_OFEV/valais_selected/Bimodal/"
 ### load GPS data #####
 if(exists("output")){rm(output)}
 output<-list()
@@ -77,11 +71,20 @@ for(f in list.files(path=behaviourFolder,full.names = TRUE,pattern=".csv")){
 obsPoints<-vect(do.call(rbind,output), geom=c("x", "y"),crs="epsg:2056")
 
 
-### create mask for Switzerland only #####
-prio<-rast("/media/luvil/NAS_DEVELOPPEMENT/IE_OFEV/Priorities/Prio_cerf_alpes20A_250915_10NB.tif")
+##### create mask for Switzerland only #######
+
+prio<-rast("/media/loreto/NAS_DEVELOPPEMENT/IE_OFEV/Priorities/Prio_cerf_alpes20A_250915_10NB.tif")
 CHMask<-ifel(prio>=0,1,NA )
 
 qStep=0.1
+
+
+#######################################################################################
+###### **** EXTRACT CURRENT VALUES FROM GPS FIXES ***** ###############################
+#######################################################################################
+
+
+### NOTE : the current values are transformed in 1-100th quantiles to standardize the different models in order to compare them
 
 
 ### load and extract current values ####
@@ -130,11 +133,15 @@ grid.arrange(g1,g2,g3, nrow=1)
 
 
 
-##########################3
+#######################################################################################
+###### **** EXTRACT Priority VALUES FROM GPS FIXES ***** ###############################
+#######################################################################################
 
-qStep=0.01
-### load and extract current values ####
-priority<-terra::rast("/media/luvil/NAS_DEVELOPPEMENT/IE_OFEV/Priorities/Prio_cerf_alpes20A_250915.tif")
+
+qStep=0.1
+### load and extract priority values ####
+priority<-terra::rast("/media/loreto/NAS_DEVELOPPEMENT/IE_OFEV/Priorities/Prio_cerf_alpes20A_250915.tif")
+#priority_masked<-mask(priority, CHMask)
 classVect<- global(priority, quantile, probs=seq(0, 1, by=qStep), na.rm=T)
 quantPrio<-classify(priority, t(as.matrix(classVect)), include.lowest=TRUE)
 obsPoints$priority<-as.numeric(as.factor(terra::extract(quantPrio,obsPoints)[,2]))
@@ -146,8 +153,8 @@ p1<-ggplot(aes(x=model,y=as.factor(priority_values)),data=obsDF)+
   scale_y_discrete(limits=factor(c(1:10)))+
   ggtitle("Model 20A")
 
-### load and extract current values ####
-priority<-terra::rast("/media/luvil/NAS_DEVELOPPEMENT/IE_OFEV/Priorities/Prio_cerf_alpes20B_250915.tif")
+### load and extract priority values ####
+priority<-terra::rast("/media/loreto/NAS_DEVELOPPEMENT/IE_OFEV/Priorities/Prio_cerf_alpes20B_250915.tif")
 classVect<- global(priority, quantile, probs=seq(0, 1, by=qStep), na.rm=T)
 quantPrio<-classify(priority, t(as.matrix(classVect)), include.lowest=TRUE)
 obsPoints$priority<-as.numeric(as.factor(terra::extract(quantPrio,obsPoints)[,2]))
@@ -160,9 +167,8 @@ p2<-ggplot(aes(x=model,y=as.factor(priority_values)),data=obsDF)+
   ggtitle("Model 20B")
 
 
-
-### load and extract current values ####
-priority<-terra::rast("/media/luvil/NAS_DEVELOPPEMENT/IE_OFEV/Priorities/Prio_cerf_alpes21_250915.tif")
+### load and extract priority values ####
+priority<-terra::rast("/media/loreto/NAS_DEVELOPPEMENT/IE_OFEV/Priorities/Prio_cerf_alpes21_250915.tif")
 classVect<- global(priority, quantile, probs=seq(0, 1, by=qStep), na.rm=T)
 quantPrio<-classify(priority, t(as.matrix(classVect)), include.lowest=TRUE)
 obsPoints$priority<-as.numeric(as.factor(terra::extract(quantPrio,obsPoints)[,2]))
@@ -175,6 +181,7 @@ p3<-ggplot(aes(x=model,y=as.factor(priority_values)),data=obsDF)+
   ggtitle("Model 21")
 
 grid.arrange(p1,p2,p3, nrow=1)
+
 
 
 ############## **** KERNEL TECHNIQUE ***** ############################
