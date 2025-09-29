@@ -20,6 +20,9 @@ library(psych)
 library(GGally)
 library(janitor)
 library(reshape2)
+library(raster)
+library(adehabitatHR)
+library(spatialEco)
 #option R- function where "width" control de maximum number of columns
 options(width=150)
 
@@ -192,10 +195,6 @@ grid.arrange(p1,p2,p3, nrow=1)
 
 
 ### this is an example for a single animal
-library(move)
-library(adehabitatHR)
-library(raster)
-library(spatialEco)
 
 
 tmp<-readr::read_csv("/media/luvil/NAS_DEVELOPPEMENT/IE_OFEV/valais_selected/Bimodal/ID003 deerYear 2018-2019 stepSize 980 autocorrelation timeSeriesKmeans 2 classes REFINED RATIO_MEANNSD.csv")%>%
@@ -481,6 +480,8 @@ ggplot(aes(x=modelName, y=meanValue, fill=type), data=finDF[finDF$modelType=="cu
   ylab("Mean Cumulated cost Values")+
   theme_bw()+theme(axis.title.x = element_blank())
 
+
+
 t.test(meanValue~type, data=subset(finDF, finDF$modelType=="current" & finDF$modelName=="current20A"))
 t.test(meanValue~type, data=subset(finDF, finDF$modelType=="current" & finDF$modelName=="current20B"))
 t.test(meanValue~type, data=subset(finDF, finDF$modelType=="current" & finDF$modelName=="current21"))
@@ -519,19 +520,30 @@ modelMask<-rast("/media/luvil/NAS_DEVELOPPEMENT/IE_OFEV/Priorities/Prio_cerf_alp
 CHMask<-ifel(modelMask>=0,1,NA )
 rm(modelMask)
 
-
-behaviourFolder="/media/luvil/NAS_DEVELOPPEMENT/IE_OFEV/valais_selected/Bimodal/"
+### need to do the aggreate raster in "raster" format
 extentRAST<-raster("/media/luvil/NAS_DEVELOPPEMENT/IE_OFEV/Priorities/Prio_cerf_alpes20A_250915.tif")
 test<-raster::focal(extentRAST,  w=matrix(1/25,nrow=5,ncol=5), fun="mean", na.rm=TRUE)
 test<-aggregate(test, fact = 5)
 
 ##### extract values from different rasters
+rasterList<-c(
 "/media/luvil/NAS_DEVELOPPEMENT/IE_OFEV/Priorities/Prio_cerf_alpes20A_250915.tif",
 "/media/luvil/NAS_DEVELOPPEMENT/IE_OFEV/Priorities/Prio_cerf_alpes20B_250915.tif",
-"/media/luvil/NAS_DEVELOPPEMENT/IE_OFEV/Priorities/Prio_cerf_alpes21_250915.tif",
+"/media/luvil/NAS_DEVELOPPEMENT/IE_OFEV/Priorities/Prio_cerf_alpes21_250915.tif"
+)
+
+titles<-c("prio20A", "prio20B","prio21")
+modelType<-c("prio", "prio", "prio")
+
+
+rasterList<-c(
 "/media/luvil/NAS_DEVELOPPEMENT/IE_OFEV/Cumulated_costs/CostDist_cerf_alpes20A_250910.tif",
 "/media/luvil/NAS_DEVELOPPEMENT/IE_OFEV/Cumulated_costs/CostDist_cerf_alpes20B_250910.tif",
-"/media/luvil/NAS_DEVELOPPEMENT/IE_OFEV/Cumulated_costs/CostDist_cerf_alpes21_250910.tif",
+"/media/luvil/NAS_DEVELOPPEMENT/IE_OFEV/Cumulated_costs/CostDist_cerf_alpes21_250910.tif"
+)
+
+titles<-c("cumCost20A", "cumCost20B","cumCost21")
+modelType<-c("cumCost", "cumCost","cumCost")
 
 
 rasterList<-c(
@@ -539,6 +551,12 @@ rasterList<-c(
               "/media/luvil/NAS_DEVELOPPEMENT/IE_OFEV/csc_cerf_alps/mosaic_20B_test_vs/mosaic_20B_test_vs.tif",
               "/media/luvil/NAS_DEVELOPPEMENT/IE_OFEV/csc_cerf_alps/mosaic_21_test_vs/mosaic_21_test_vs.tif")
 
+titles<-c( "current20A", "current20B", "current21")
+modelType<-c("current", "current", "current")
+
+
+
+#### Run the algorithm
 qQuant<-0.1
 quantRasterList<-list()
  for(i in 1:length(rasterList)){
@@ -552,14 +570,9 @@ quantRasterList<-list()
    quantRasterList[[i]]<-currQuant
  }
 
-"prio20A", "prio20B","prio21", "cumCost20A", "cumCost20B","cumCost21",
-"prio", "prio","prio", "cumCost", "cumCost","cumCost", 
 
 
-titles<-c( "current20A", "current20B", "current21")
-modelType<-c("current", "current", "current")
-
-
+behaviourFolder="/media/luvil/NAS_DEVELOPPEMENT/IE_OFEV/valais_selected/Bimodal/"
 
 resList<-list()
 for(f in list.files(path=behaviourFolder,full.names = TRUE,pattern=".csv")){
@@ -638,14 +651,6 @@ for(f in list.files(path=behaviourFolder,full.names = TRUE,pattern=".csv")){
 
 
 finDF_prop<-do.call(rbind, resList)
-
-ggplot(aes(x=Var1, y=Freq, fill=factor(type)), data=subset(finDF_prop, finDF_prop$modelType=="current") )+
-  geom_bar(stat = "identity",position=position_dodge(width = 1))+theme_bw()+
-  theme(axis.title.x = element_blank())+facet_wrap(~modelName)
-
-
-
-
 
 
 
