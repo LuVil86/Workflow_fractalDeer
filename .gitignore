@@ -1,0 +1,12 @@
+
+
+
+# OS generated files #
+######################
+
+*.Rhistory
+
+# In case lolo makes a git mistake #
+####################################
+select_variables.*
+tmp.*
