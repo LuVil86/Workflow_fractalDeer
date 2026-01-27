@@ -12,17 +12,17 @@ from pathlib import Path
 
 ####### parameters ############
 
-rasterPath="/media/loreto/Grande/ie-ofev-24-25/ssf_jura/ssf_raster/output/resistance_cerf_jura_19_sep_25_model20_clip.tif"
+rasterPath="/media/luvil/NAS_DEVELOPPEMENT/IE_OFEV/Resistances/Hermine/resistances_glm16_experts_addition_clip.tif"
 
-CScapeOutPath="/media/loreto/Grande/ie-ofev-24-25/csc_cerf_jura/tuile_20"
+CScapeOutPath="/home/luvil/IE-OFEV/Hermine/CSCape_tiles_addition_model_glm16_experts"
 
-tiles = pd.read_csv('/media/loreto/Grande/ie-ofev-24-25/csc_cerf_jura/grille/grille_3000_jura.csv')
+tiles = pd.read_csv('/media/luvil/NAS_DEVELOPPEMENT/IE_OFEV/Pinch-points/Hermine/grille/grille_3000_hermine_t1.csv')
 
 percentBuffer=100
 tileSize=(3000,3000)
-force_square=True,
+force_square=True
 checkTotalSize=False
-nProc=10
+nProc=8
 
 ##############################
 

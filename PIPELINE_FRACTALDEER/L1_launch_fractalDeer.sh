@@ -82,7 +82,7 @@ dimList=$(wc -l "${stepList}" | cut -d " " -f 1)
 if [[ $dimList -le 1 ]];
 then
 echo "the step Size list is empty : aborting the next steps of the pipeline"
-exit 2
+exit 0
 fi
 ### -4. ** generate behaviour classification from candidate list ** ###
 python ./S4_get_behaviour_vector_from_list.py "${inPath}" "${stepList}"
