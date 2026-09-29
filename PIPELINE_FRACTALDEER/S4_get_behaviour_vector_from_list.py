@@ -19,8 +19,10 @@ def launcher(inFilePath,outDir,prenom,deerYear, stepSize):
     stepOutFile=os.path.join(outDir,f"DIVIDER_PATH_{prenom}_{deerYear}_stepSize_{round(stepSize)}_autocorrelation_timeSeriesKmeans_2_classes.csv")
 
     print(f"selected step size : {stepSize}")
+    print("")
     if args.check_existing_file:
         if os.path.exists(outFile):
+            print(f"The file {outFile} already exists ! skipping the computation...")
             return
     else:
         try:
@@ -68,6 +70,7 @@ def launcher(inFilePath,outDir,prenom,deerYear, stepSize):
     tmpOut["behaviour"]=behaviourVector
     tmpOut["path_no"]=pathNo
     tmpOut.drop("dateTime",axis=1).to_csv(outFile)
+    print(f"---> behaviour vector for stepSize {stepSize} successfully added. The output file is {outFile}")
     #### output of step classification file #####
     #stepOut=behaviourDF.copy()
     #stepOut["behaviour"]=colorBehaviour[:-1]
@@ -82,12 +85,13 @@ def launcher(inFilePath,outDir,prenom,deerYear, stepSize):
 if __name__=="__main__":
     parser = argparse.ArgumentParser(description=''' ** run the "getBehaviourVector" function from a list of divider length associated with an animalName and deerYear :
     traditionally, the list would be the output of the "get_Zscore_CRW.R" script ''')
-    parser.add_argument('inFilePath', type=str, help=''' FULL path to the GPS file in .csv''')
-    parser.add_argument('stepListFile', type=str,help=''' FULL path to the csv file (table) with the candidate stepSizes. The table should have at least the three following
+    parser.add_argument("inFilePath", type=str, help=''' FULL path to the GPS file in .csv''')
+    parser.add_argument("stepListFile", type=str,help=''' FULL path to the csv file (table) with the candidate stepSizes. The table should have at least the three following
      columms : "prenom", "deerYear" and "stepSize"
      NOTE : the script will try to find the [animalName]_[deerYear].csv within the [animalName] folder at the basis of the folder where the script is.. 
      so be careful where your GPS files are !!   ''')
-    parser.add_argument('--check_existing_file', type=bool,help="whether you want to check and overwrite already existing behaviour files", default=False)
+    parser.add_argument("--check_existing_file", action="store_true",help='''
+    whether you want to check if the behaviour files already exists and if so, NOT overwrite them''')
     args=parser.parse_args()
     try:
         print(f"candidate step list : {args.stepListFile}")
@@ -95,6 +99,7 @@ if __name__=="__main__":
         outDir="/".join(args.stepListFile.split("/")[:-1])
         print(f"input file : {args.inFilePath}")
         print(f" output directory : {outDir}")
+        print(f"overwriting file ? {args.check_existing_file}")
         inFilePath=args.inFilePath
     except FileNotFoundError as fnf:
         print("the list you provided does not exist")
@@ -103,7 +108,6 @@ if __name__=="__main__":
         sys.exit(1)
     else:   
         with ProcessPoolExecutor(max_workers=32) as executor:
-            
                 
                 results=executor.map(launcher, [inFilePath]*len(stepList),[outDir]*len(stepList), stepList.prenom, stepList.deerYear, stepList.stepSize)
         #for future in as_completed(results):

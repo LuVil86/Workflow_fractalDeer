@@ -24,7 +24,7 @@ if [[ "${currentEnvir}" != "pipeline_fractalDeer" ]]
 then
 echo "current environment is not 'pipeline_fractalDeer' : aborting execution"
 echo " - in case you haven't created the environment, run the 'environment_fractalDeer.yml' file in conda "
-echo "   with the command 'conda env create -f /home/luvil/Workflow_fractalDeer/PIPELINE_FRACTALDEER/environment_fractalDeer.yml' "
+echo "   with the command 'conda env create -f ./Workflow_fractalDeer/PIPELINE_FRACTALDEER/environment_fractalDeer.yml' "
 echo "   and activate it using the commmand 'conda activate pipeline_fractalDeer'"
 
 exit 2
@@ -32,7 +32,7 @@ fi
 
 
 
-inPath=$( realpath $1)
+inPath=$(realpath $1)
 inCSVfile=$(basename $1 .csv)
 #LOCALIZE=$(echo ${inPath%/*} | sed 's/[\\ '$'\t'']/\\&/')
 deerName=$(echo $inCSVfile | cut -d "_" -f 1)

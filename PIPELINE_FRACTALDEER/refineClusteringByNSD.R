@@ -38,6 +38,7 @@ refineClusteringByNSD<-function (behaviourFile,
                                     optimum")}
   
   #################### load packages and functions ############################################
+    suppressPackageStartupMessages({
   require(gridExtra)
   require(multidplyr)
   require(tidyverse)
@@ -52,6 +53,7 @@ refineClusteringByNSD<-function (behaviourFile,
   require(grid)
   require(FactoMineR)
   require(fs)
+  })
   sourceDir <- function(path, trace = TRUE, ...) {
     op <- options(); on.exit(options(op)) # to reset after each 
     for (nm in list.files(path, pattern = "[.][RrSsQq]$")) {

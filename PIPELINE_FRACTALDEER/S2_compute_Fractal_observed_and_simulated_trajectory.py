@@ -4,7 +4,7 @@ import geopandas as gp
 import os
 import numpy as np
 import sys
-from concurrent.futures import ProcessPoolExecutor,as_completed, ThreadPoolExecutor
+from concurrent.futures import ProcessPoolExecutor,as_completed
 
 
 '''
@@ -51,8 +51,9 @@ if __name__=="__main__":
         animalTest=fileName.split("_")[0]
 
         yearTest="_".join(fileName.split("_")[1:3])
+        
         print(f" deer : {animalTest} -- deerYear : {yearTest}")
-
+        print(f" output directory : {workDir}")
 
         ##################### loading observed trajectory : this is the inFile from the bash script
         try:
@@ -65,7 +66,7 @@ if __name__=="__main__":
         ##################### loading simulated trajectory
         try:
             tmpSim=pd.read_csv(os.path.join(workDir, f"Simulated_CRW_{animalTest}_{yearTest}.csv"))
-            simTraj=gp.GeoDataFrame(tmpSim, geometry=gp.points_from_xy(tmpSim["xcoord"], tmpSim["ycoord"]),crs=2056)
+            simTraj=gp.GeoDataFrame(tmpSim,  geometry=gp.GeoSeries.from_wkt(tmpSim.geometry),crs=2056)
             simTraj.sort_values(by="dateTime", axis=0,inplace=True)
         except FileNotFoundError as fnf:
             print("the simulated trajectory file does not exist.. did you forget to generate it ?")
@@ -106,7 +107,8 @@ if __name__=="__main__":
     try:
         os.mkdir(resultPath)
     except OSError as error:
-        print(error)   
+        print("output directory exists")
+        pass   
     poolStat.to_csv(os.path.join(resultPath,f"{animalTest}_{yearTest}_Fractal_values_{initStep}_{endStep}_{nbStep}_scales_{nrun}_simulations.csv"), index=False)    
 
     meanScale=[]

@@ -9,10 +9,10 @@
 
 ### ---Input---
 # - the output table generated from the "get_Zscores_CRW.R" script
-# - the metric you want to compute statistics on. by default, "ratio_meanNSD"
+# 
 
 ### --output ---
-## a .csv table with the calculated statistics
+## a .csv table with the calculated statistics for meanNSD,cumulativeNSD and endNSD
 
 #############################################################################
 

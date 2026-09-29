@@ -1,5 +1,6 @@
 
 getNSDValues<-function(behaviourFile=character(), display="saison", save.plot=FALSE, mutate.df=TRUE, show.breakpoints=TRUE){
+  suppressPackageStartupMessages({
 require(multidplyr)
 require(tidyverse)
 require(dplyr)
@@ -9,7 +10,8 @@ require(arulesViz)
 require(gdata)
 require(ggplot2)
 require(ggtext)
-require(fs)
+require(fs)}
+)
   sourceDir <- function(path, trace = TRUE, ...) {
     op <- options(); on.exit(options(op)) # to reset after each 
     for (nm in list.files(path, pattern = "[.][RrSsQq]$")) {
