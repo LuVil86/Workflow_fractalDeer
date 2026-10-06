@@ -1,10 +1,16 @@
 
 
 
-# OS generated files #
+# R generated files #
 ######################
 
 *.Rhistory
+
+# Python generated files #
+#########################
+
+__pycache__/
+*.pyc
 
 # In case lolo makes a git mistake #
 ####################################
