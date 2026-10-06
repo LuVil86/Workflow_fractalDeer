@@ -5,7 +5,7 @@
 ######################
 
 *.Rhistory
-
+Rplots.pdf
 # Python generated files #
 #########################
 
