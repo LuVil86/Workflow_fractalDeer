@@ -67,7 +67,7 @@ def launcher(inFilePath,outDir,prenom,deerYear, stepSize, check_existing_file):
     tmpOut=subset_cerf.copy()
     tmpOut["behaviour"]=behaviourVector
     tmpOut["path_no"]=pathNo
-    tmpOut.drop("dateTime",axis=1).to_csv(outFile)
+    tmpOut.drop(columns=["dateTime"],axis=1).iloc[:, 1:].to_csv(outFile, index=False)
     finSTR = f"---> behaviour vector for stepSize {stepSize} successfully added. The output file is {outFile}"
     #### output of step classification file #####
     #stepOut=behaviourDF.copy()

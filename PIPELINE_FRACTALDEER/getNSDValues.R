@@ -21,7 +21,7 @@ require(fs)
   }
   sourceDir("./migrateR_1.0.9/migrateR/R/")
   options(readr.show_col_types = FALSE)
-  
+
   coordSplit<-function(x){
     tmp<-unlist(strsplit(x, split=" "))
     if(any(grepl("Z", tmp))){
@@ -44,7 +44,7 @@ plotTitle_for_classical<-paste(strsplit(plotTitle, split=" ")[[1]][1:3], collaps
 cat(" input behaviour file -->  ",behaviourFile,"\n")
 if(!grepl(".csv", behaviourFile)){stop("The file you provided does not have '.csv' extension")}
 if(mutate.df==TRUE){
-datCerfs<-readr::read_csv(behaviourFile)%>%
+datCerfs<-readr::read_csv(behaviourFile, name_repair = "minimal")%>%
   mutate(coord_X=apply(as.data.frame(geometry), 1,function(x) coordSplit(x)$coordX ))%>%
   mutate(coord_Y=apply(as.data.frame(geometry), 1,function(x) coordSplit(x)$coordY ))%>%
   mutate(dateTime=as.POSIXct(paste(UTC_DATE, UTC_TIME, sep=" "), origin="1970-01-01", tz="UTC"))%>%
@@ -54,9 +54,9 @@ datCerfs<-readr::read_csv(behaviourFile)%>%
   mutate(saison=factor(saison))%>%
   mutate(path_no=factor(path_no))%>%
   dplyr::select(x="coord_X", y="coord_Y",t="dateTime", id="prenom",deerYear="deerYear", jourNuit="jourNuit",saison="saison","behaviour"=behaviour, "path_no"=path_no)
-suppressWarnings(datCerfs<-datCerfs%>%transform(saison = fct_relevel(saison, c("Mars-Mai","Juin-Aout","Septembre-Novembre","Decembre-Fevrier"))))
+  suppressWarnings(datCerfs<-datCerfs%>%transform(saison = fct_relevel(saison, c("Mars-Mai","Juin-Aout","Septembre-Novembre","Decembre-Fevrier"))))
 }else{
-  datCerfs<-readr::read_csv(behaviourFile)%>%    
+  datCerfs<-readr::read_csv(behaviourFile, id_repair = "unique")%>%    
   mutate(path_no=factor(new_path_no))%>%
   mutate(behaviour=ifelse(behaviour=="mc_1","in-patch", "in-matrix"))%>%
   suppressWarnings(datCerfs<-datCerfs%>%transform(saison = fct_relevel(saison, c("Mars-Mai","Juin-Aout","Septembre-Novembre","Decembre-Fevrier"))))
@@ -98,7 +98,6 @@ plot(pl)
 if (save.plot==TRUE){
   print("trying to save plot...");
   fp<-file.path(getwd(),animalTest,paste("NSD WITH SEASONS ", plotTitle,".png",sep=""), fsep = "/" )
-  print(fp)
   ggsave(filename =fp,
          plot = pl,
          device = "png")
@@ -136,7 +135,6 @@ if (save.plot==TRUE){
     rm(tmp)
     tBreakPoints<-datCerfs$t[breakpoints]
     ymax <- ggplot_build(pl)$layout$panel_params[[1]]$y.range[2]
-    print(ymax)
     pl<-pl+geom_vline(xintercept = tBreakPoints, linetype="dotted")
     
     #  annotate("text", x=tBreakPoints, y=rep(ymax,length(tBreakPoints)), label=finDat$path_no[-1], size=4)

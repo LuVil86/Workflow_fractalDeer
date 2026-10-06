@@ -42,7 +42,7 @@ getNSDValues_forGUI<-function(behaviourFile=character()){
   }
   sourceDir("./migrateR_1.0.9/migrateR/R/")
   options(readr.show_col_types = FALSE)
-  
+  options(tidyverse.quiet = TRUE)
   coordSplit<-function(x){
     tmp<-unlist(strsplit(x, split=" "))
     if(any(grepl("Z", tmp))){
@@ -63,8 +63,6 @@ getNSDValues_forGUI<-function(behaviourFile=character()){
   animalTest<-strsplit(plotTitle, split=" ")[[1]][1]
   plotTitle_for_classical<-paste(strsplit(plotTitle, split=" ")[[1]][1:3], collapse = " ")
   if(!grepl(".csv", behaviourFile)){stop("The file you provided does not have '.csv' extension")}
- 
-  ## removed "mutate.df" option
     datCerfs<-readr::read_csv(behaviourFile)%>%    
       mutate(path_no=factor(new_path_no))%>%
       mutate(behaviour=ifelse(behaviour=="mc_1","in-patch", "in-matrix"))%>%
