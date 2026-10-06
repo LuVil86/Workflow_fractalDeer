@@ -62,7 +62,6 @@ getNSDValues_forGUI<-function(behaviourFile=character()){
   outDir=path_dir(behaviourFile)
   animalTest<-strsplit(plotTitle, split=" ")[[1]][1]
   plotTitle_for_classical<-paste(strsplit(plotTitle, split=" ")[[1]][1:3], collapse = " ")
-  cat(" input behaviour file -->  ",behaviourFile,"\n")
   if(!grepl(".csv", behaviourFile)){stop("The file you provided does not have '.csv' extension")}
  
   ## removed "mutate.df" option
@@ -75,7 +74,6 @@ getNSDValues_forGUI<-function(behaviourFile=character()){
   
   RD_traj<-as.ltraj(xy=datCerfs[,c("x","y")], date=datCerfs$t, id=datCerfs$id)
   suppressWarnings(RD.nsd1 <- mvmtClass(RD_traj))
-  cat("**** BEST MODEL ****\n")
   topmodel<-rownames(summary(topmvmt(RD.nsd1)))
 
   nsdDF<-data.frame(dateTime=datCerfs["t"],
@@ -136,11 +134,13 @@ getNSDValues_forGUI<-function(behaviourFile=character()){
 ###################################################################
 source("./getNSDValues.R")
 source("./refineClusteringByNSD.R")
+  suppressPackageStartupMessages({
+
 require(fs)
 if(!require(stringr)) {
   install.packages("stringr"); require(stringr)}
 
-
+})
 inputParam<-commandArgs(trailingOnly = T)
 fullPath=inputParam[1]
 
@@ -155,7 +155,7 @@ parameter=inputParam[2]
 inBehaviourFile <- fullPath
 dirPath=path_dir(inBehaviourFile)
 fileName=path_file(inBehaviourFile)
-x<-getNSDValues(inBehaviourFile, display="behaviour",save.plot=FALSE , mutate.df=TRUE, show.breakpoints = T)
+x<-getNSDValues(inBehaviourFile, display="behaviour",save.plot=FALSE , mutate.df=TRUE, show.breakpoints = T,print_output=FALSE)
 
 
 newDat<-refineClusteringByNSD(inBehaviourFile,

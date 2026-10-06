@@ -551,7 +551,9 @@ def getBehaviourVector(selectedStep:int,
 
     df_selected=computeVFractal(selectedStep, trajData, getGeoDataFrame=True,successive=successive)
     df_selected["diffNearest"]=df_selected["nearestNextPoint"]-df_selected["nearestPoint"]
-    corrDF=pd.DataFrame({"angN":df_selected["angleList"][:-1].reset_index(drop=True),"angNplus1":df_selected["angleList"][1:].reset_index(drop=True),"diffNearest":stats.zscore(df_selected["diffNearest"][:-1],nan_policy="omit").reset_index(drop=True)})
+    corrDF=pd.DataFrame({"angN":pd.Series(df_selected["angleList"][:-1]).reset_index(drop=True),
+                         "angNplus1":pd.Series(df_selected["angleList"][1:]).reset_index(drop=True),
+                         "diffNearest":pd.Series(stats.zscore(df_selected["diffNearest"][:-1],nan_policy="omit")).reset_index(drop=True)})
     #complete=pd.DataFrame({"angN":[0], "angNplus1":[0]})
     
 

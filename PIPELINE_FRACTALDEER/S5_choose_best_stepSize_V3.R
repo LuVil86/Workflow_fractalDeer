@@ -289,8 +289,9 @@ coordSplit<-function(x){
 
 ############ *** input parameters parsing ***** ################
 
-cat("\n****** CHOOSE_BEST_STEPSIZES.R ********\n")
-
+cat("\n********************************************\n")
+cat("\n****** S5 : CHOOSE_BEST_STEPSIZES.R ********\n")
+cat("\n********************************************\n")
 cerf_path<-commandArgs(trailingOnly = T)
 inFolder=cerf_path[1]
 tmpPath=unlist(strsplit(inFolder, "/"))
@@ -373,7 +374,7 @@ write.csv(tot1, file=paste0(inFolder,"/results_Chisq_endNSD_",outSuffix) , row.n
 write.csv(tot2, file=paste0(inFolder,"/results_Chisq_meanNSD_",outSuffix) , row.names=F)
 write.csv(tot3, file=paste0(inFolder,"/results_Chisq_cumulativeNSD_",outSuffix) , row.names=F)
 
-
+cat("\n >>>> Script S5 Done ! <<<<< \n")
 
 
 

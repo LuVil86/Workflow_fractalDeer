@@ -8,7 +8,7 @@ import numpy as np
 import argparse
 from concurrent.futures import ProcessPoolExecutor,as_completed, ThreadPoolExecutor
 
-def launcher(inFilePath,outDir,prenom,deerYear, stepSize):
+def launcher(inFilePath,outDir,prenom,deerYear, stepSize, check_existing_file):
     if(isinstance(prenom, int)):
         prenom=str(prenom)
     if stepSize=="NA":
@@ -18,9 +18,9 @@ def launcher(inFilePath,outDir,prenom,deerYear, stepSize):
     outFile=os.path.join(outDir,f"{prenom}_{deerYear}_stepSize_{round(stepSize)}_autocorrelation_timeSeriesKmeans_2_classes.csv")
     stepOutFile=os.path.join(outDir,f"DIVIDER_PATH_{prenom}_{deerYear}_stepSize_{round(stepSize)}_autocorrelation_timeSeriesKmeans_2_classes.csv")
 
-    print(f"selected step size : {stepSize}")
-    print("")
-    if args.check_existing_file:
+    print(f"""==> computing selected step size : {stepSize}...
+          """)
+    if check_existing_file:
         if os.path.exists(outFile):
             print(f"The file {outFile} already exists ! skipping the computation...")
             return
@@ -33,8 +33,6 @@ def launcher(inFilePath,outDir,prenom,deerYear, stepSize):
             print(f"the input GPS dataframe {inFilePath} has not been found.. did you forget to generate it ?")
         
     
-   
-    print("computing ...")
     behaviourDF = fractalFunctions.getBehaviourVector(selectedStep=stepSize,trajData=subset_cerf,showPlot=False,
     nClass=2,
     testParameter="autocorrelation", 
@@ -70,37 +68,29 @@ def launcher(inFilePath,outDir,prenom,deerYear, stepSize):
     tmpOut["behaviour"]=behaviourVector
     tmpOut["path_no"]=pathNo
     tmpOut.drop("dateTime",axis=1).to_csv(outFile)
-    print(f"---> behaviour vector for stepSize {stepSize} successfully added. The output file is {outFile}")
+    finSTR = f"---> behaviour vector for stepSize {stepSize} successfully added. The output file is {outFile}"
     #### output of step classification file #####
     #stepOut=behaviourDF.copy()
     #stepOut["behaviour"]=colorBehaviour[:-1]
 
     #stepOut.to_csv(stepOutFile)
-    return None
+    return finSTR
 
 
 
 
 
-if __name__=="__main__":
-    parser = argparse.ArgumentParser(description=''' ** run the "getBehaviourVector" function from a list of divider length associated with an animalName and deerYear :
-    traditionally, the list would be the output of the "get_Zscore_CRW.R" script ''')
-    parser.add_argument("inFilePath", type=str, help=''' FULL path to the GPS file in .csv''')
-    parser.add_argument("stepListFile", type=str,help=''' FULL path to the csv file (table) with the candidate stepSizes. The table should have at least the three following
-     columms : "prenom", "deerYear" and "stepSize"
-     NOTE : the script will try to find the [animalName]_[deerYear].csv within the [animalName] folder at the basis of the folder where the script is.. 
-     so be careful where your GPS files are !!   ''')
-    parser.add_argument("--check_existing_file", action="store_true",help='''
-    whether you want to check if the behaviour files already exists and if so, NOT overwrite them''')
-    args=parser.parse_args()
+def run(inFilePath, stepListFile, check_existing_file):    
+    
+
+    print("**** RUN S4_get_behaviour_vector_from_list.py ****")
     try:
-        print(f"candidate step list : {args.stepListFile}")
-        stepList=pd.read_csv(os.path.abspath(args.stepListFile))
-        outDir="/".join(args.stepListFile.split("/")[:-1])
-        print(f"input file : {args.inFilePath}")
+        print(f"candidate step list : {stepListFile}")
+        stepList=pd.read_csv(os.path.abspath(stepListFile))
+        outDir="/".join(stepListFile.split("/")[:-1])
+        print(f"input file : {inFilePath}")
         print(f" output directory : {outDir}")
-        print(f"overwriting file ? {args.check_existing_file}")
-        inFilePath=args.inFilePath
+        print(f"overwriting file ? {check_existing_file}")
     except FileNotFoundError as fnf:
         print("the list you provided does not exist")
     if stepList.empty:
@@ -109,10 +99,26 @@ if __name__=="__main__":
     else:   
         with ProcessPoolExecutor(max_workers=32) as executor:
                 
-                results=executor.map(launcher, [inFilePath]*len(stepList),[outDir]*len(stepList), stepList.prenom, stepList.deerYear, stepList.stepSize)
-        #for future in as_completed(results):
-        #    data = future.result()
-        #print(data)
+            results=list(executor.map(launcher, [inFilePath]*len(stepList),[outDir]*len(stepList), stepList.prenom, stepList.deerYear, stepList.stepSize, [check_existing_file]*len(stepList)))
+        
+            for res in results:
+                print(res)
+
+    print("******* Script S4 DONE *********")
+    executor.shutdown()
 
 
+if __name__=="__main__":
+    parser = argparse.ArgumentParser(description=''' ** run the "getBehaviourVector" function from a list of divider length associated with an animalName and deerYear :
+    traditionally, the list would be the output of the "get_Zscore_CRW.R" script ''')
+    parser.add_argument("inFilePath", type=str, help=''' FULL path to the GPS file in .csv''')
+    parser.add_argument("stepListFile", type=str,help=''' FULL path to the csv file (table) with the candidate stepSizes. The table should have at least the three following
+        columms : "prenom", "deerYear" and "stepSize"
+        NOTE : the script will try to find the [animalName]_[deerYear].csv within the [animalName] folder at the basis of the folder where the script is.. 
+        so be careful where your GPS files are !!   ''')
+    parser.add_argument("--check_existing_file", action="store_true",help='''
+    whether you want to check if the behaviour files already exists and if so, NOT overwrite them''')
+    args=parser.parse_args()
+
+    #run(args.inFilePath, args.stepListFile, args.check_existing_file)
 

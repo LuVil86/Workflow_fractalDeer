@@ -1,5 +1,5 @@
 
-getNSDValues<-function(behaviourFile=character(), display="saison", save.plot=FALSE, mutate.df=TRUE, show.breakpoints=TRUE){
+getNSDValues<-function(behaviourFile=character(), display="saison", save.plot=FALSE, mutate.df=TRUE, show.breakpoints=TRUE,print_output=TRUE){
   suppressPackageStartupMessages({
 require(multidplyr)
 require(tidyverse)
@@ -10,8 +10,8 @@ require(arulesViz)
 require(gdata)
 require(ggplot2)
 require(ggtext)
-require(fs)}
-)
+require(fs)
+    })
   sourceDir <- function(path, trace = TRUE, ...) {
     op <- options(); on.exit(options(op)) # to reset after each 
     for (nm in list.files(path, pattern = "[.][RrSsQq]$")) {
@@ -65,16 +65,19 @@ suppressWarnings(datCerfs<-datCerfs%>%transform(saison = fct_relevel(saison, c("
 
 RD_traj<-as.ltraj(xy=datCerfs[,c("x","y")], date=datCerfs$t, id=datCerfs$id)
 suppressWarnings(RD.nsd1 <- mvmtClass(RD_traj))
-cat("**** BEST MODEL ****\n")
 topmodel<-rownames(summary(topmvmt(RD.nsd1)))
-print(topmodel)
+if(print_output == TRUE){
+cat("**** BEST MODEL ****\n")
+  print(topmodel)
+}
+
+
 
 nsdDF<-data.frame(dateTime=datCerfs["t"],
                   NSD=RD.nsd1[[as.character(unique(datCerfs$id))]]@data[,2],
                   saison=datCerfs["saison"], 
                   jourNuit=datCerfs["jourNuit"],
                   behaviour=datCerfs["behaviour"],path_no=datCerfs["path_no"])
-print(head(nsdDF))
 if(display=="saison"){
 pl<-ggplot(aes(x=t, y=NSD), data=nsdDF)+
   geom_point(aes(colour=saison))+
