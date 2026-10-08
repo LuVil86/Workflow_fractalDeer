@@ -5,13 +5,16 @@
 ######################
 
 *.Rhistory
+PIPELINE_FRACTALDEER/.Rhistory
+PIPELINE_FRACTALDEER/.Rdata
 Rplots.pdf
 # Python generated files #
 #########################
 
 __pycache__/
+PIPELINE_FRACTALDEER/__pycache__/
 *.pyc
-
+PIPELINE_FRACTALDEER/*.pyc
 # anything that is produced by the demo #
 #########################################
 PIPELINE_FRACTALDEER/demo_data/*
