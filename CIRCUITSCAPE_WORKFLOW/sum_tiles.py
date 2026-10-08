@@ -15,9 +15,8 @@ import rasterio
 import os
 
 # ******** INPUT PARAMETERS ******** #
-cutTileFolder="/media/loreto/Grande/ie-ofev-24-25/csc_cerf_jura/cut_tuile_20"
-
-outFolder="/media/loreto/Grande/ie-ofev-24-25/csc_cerf_jura/summed_tuile_20"
+cutTileFolder="/home/loreto/Documents/ebedu/Resultats_LU/cut_tuile_c1_1"
+outFolder="/home/loreto/Documents/ebedu/Resultats_LU/test"
 # *********************************** #
 
 
@@ -33,8 +32,9 @@ if __name__=='__main__':
 	    os.makedirs(outFolder)
 		
     for file in os.listdir(cutTileFolder):
-        if file.endswith("ns_cum_curmap.tif"):
+         if file.endswith("ns_cum_curmap.tif"):
             tileList.append(int(file.split("_")[2]))
+            
             
     for tileNumber in tileList:
         matchList=[]    

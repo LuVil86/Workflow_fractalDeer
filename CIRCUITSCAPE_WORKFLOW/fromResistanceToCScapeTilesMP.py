@@ -1,10 +1,10 @@
 import os
 import pandas as pd
 import numpy as np
-from matplotlib import pyplot as plt
+#from matplotlib import pyplot as plt
 import rasterio as rio
 from rasterio.windows import Window
-from concurrent.futures import ProcessPoolExecutor,ThreadPoolExecutor, as_completed
+from concurrent.futures import ProcessPoolExecutor, as_completed
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -12,17 +12,20 @@ from pathlib import Path
 
 ####### parameters ############
 
-rasterPath="/media/loreto/Grande/ie-ofev-24-25/ssf_jura/ssf_raster/output/resistance_cerf_jura_19_sep_25_model20_clip.tif"
+rasterPath='/home/loreto/Documents/ebedu/Resultats_LU/resistance_map/resistances_c23_2_k025_23sept26_clip.tif'
 
-CScapeOutPath="/media/loreto/Grande/ie-ofev-24-25/csc_cerf_jura/tuile_20"
+CScapeOutPath='/home/loreto/Documents/ebedu/Resultats_LU/tuile_c23_2_k025_23sept26'
 
-tiles = pd.read_csv('/media/loreto/Grande/ie-ofev-24-25/csc_cerf_jura/grille/grille_3000_jura.csv')
+#tiles = pd.read_csv('/home/loreto/Documents/ebedu/ebedu_milieux/study_area/grille_5000_from_extent.csv')
+tiles = None
 
-percentBuffer=100
-tileSize=(3000,3000)
-force_square=True,
+percentBuffer=0
+
+#### (number of rows:Height , number of columns:width)
+tileSize=(3600,3000)
+force_square=False
 checkTotalSize=False
-nProc=10
+nProc=12
 
 ##############################
 
@@ -40,7 +43,7 @@ f'\n'
 f'[Calculation options]\n'
 f'low_memory_mode = False\n'
 f'parallelize = True\n'
-f'solver = cholmod\n'
+f'solver = cg+amg\n'
 f'print_timings = True\n'
 f'max_parallel = 2\n'
 f'\n'
@@ -159,7 +162,6 @@ if __name__ == "__main__":
         #pathName, fileName = os.path.split(outputPath)
         start=datetime.now()
         CScapeOutPath=Path(CScapeOutPath)
-        tilesIndex=tiles["id"].to_list()
 
         if not os.path.exists(CScapeOutPath):
                 print(""" ***** output directory for CircuitScape does not exists : please create it 
@@ -198,9 +200,10 @@ if __name__ == "__main__":
                               
                                    
                               
-
+                print(f" {ncol} --- {tileSize[1]}, {nrow} --- {tileSize[0]}")
                 nbSplitX=ncol//(tileSize[1])
                 nbSplitY=nrow//(tileSize[0])
+                assert nbSplitX!=0 or nbSplitY!=0
                 print("number of tiles :")
                 print(f"{nbSplitX} tiles per row X {nbSplitY} tiles per column")
                 
@@ -210,6 +213,13 @@ if __name__ == "__main__":
                 splitCoordsYStart=[ i[0] for i in np.array_split(np.arange(nrow),nbSplitY)]
                 splitCoordsYStop=[ i[-1] for i in np.array_split(np.arange(nrow),nbSplitY)]
                 k=0
+                
+                if tiles is None:
+                    tilesIndex = list(range(len(splitCoordsXStart)+len(splitCoordsXStart)))
+                    print(tilesIndex)
+                else:    
+                    tilesIndex=tiles["id"].to_list()
+                
 
         with ProcessPoolExecutor(nProc) as executor:
                 futures=[]

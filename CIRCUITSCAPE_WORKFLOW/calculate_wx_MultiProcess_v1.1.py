@@ -26,13 +26,15 @@ def computeRSF(enviCoeff, habRasterPath, habCoefs, x1,x2,y1,y2,k):
         habTerm = np.zeros(habVar.shape)
         ###entry coefficients of landuses
         ##create a dictionary for corrrespondances from a csv
-        data_dict = pd.Series(habCoefs.coef.values, index=habCoefs.value).to_dict()
-        #Calculate the habitat terms b*landuse
-        for key, value in data_dict.items():
-            habTerm[habVar==key] = value
+        if habCoefs is not None:
+            data_dict = pd.Series(habCoefs.coef.values, index=habCoefs.value).to_dict()
+            #Calculate the habitat terms b*landuse
+            for key, value in data_dict.items():
+                habTerm[habVar==key] = value
+        
         TermList = []
         TermList.append(habTerm)
-
+        
     ###### multiply each continuous variable raster with its respective coefficient  --> add them to TermList
 
     for covar in enviCoeff:
@@ -54,31 +56,50 @@ if __name__=="__main__":
     ################################ *** input parameters *** ###########################################
         
     habRasterPath='/media/loreto/NAS_DEVELOPPEMENT/IE_OFEV/Habitats/Hermine/HabitatMap_v1_50_hermine_260106_Nibble2.tif'
+    
+    GLMcoeffPath = '/home/loreto/Documents/sdm_opportunistic_data/RSF_cleaned_output/glm21_cleaned_AGGR_BCKG_50m_nbPA_100000_nb_Draw_5.csv'
+    
+    correspHabitatPath = '/media/loreto/NAS_DEVELOPPEMENT/IE_OFEV/Habitats/Hermine/unique_habitat_hermine_for_resistances_06janv26.csv'
 
     chosenPA = "PA3"
-    outFile = '/media/loreto/Grande/ie-ofev-24-25/sdm_hermine/wx_GLM13_AGGR_BCKG_redone.tif'
+    
+    outFile = '/media/loreto/Grande/ie-ofev-24-25/sdm_hermine/res_raster_allS_cleaned/wx_glm21_AGGR_BCKG_cleaned.tif'
 
     ### glm15 = only densities + distEAUX+distPath+landUse
     ### glm16 = only densities + distEAUX+distPath
-    GLMcoeff = pd.read_csv('/media/loreto/T7_ROUGE/lolo/sdm_opportunistic_data/RSF_with_Reass_2_output/glm13_AGGR_BCKG_50m_nbPA_100000_nb_Draw_5.csv')
-    GLMcoeff["new_short_class"] = GLMcoeff["term"].str.replace("landUse", "")
+    
+    
+    #### * COEFFICIENTS FOR CONTINUOUS COVARIABLES * #####
+    
+    GLMcoeff = pd.read_csv(GLMcoeffPath)
+    GLMcoeff = GLMcoeff[np.invert(GLMcoeff["term"].str.startswith("landUse")) ]
     GLMcoeff.rename(columns={"Estimate" : "coef"}, inplace=True)
-
     NASpath= "/media/loreto/NAS_DEVELOPPEMENT"
 
     covarRasterPath=pd.read_csv('/media/loreto/Grande/ie-ofev-24-25/sdm_hermine/sdm_hermine_covariable_path_list.csv')
     covarRasterPath["rasterPath"] = NASpath + covarRasterPath["rasterPath"].astype(str)
- 
 
-    ######### * COEFFICIENTS LAND USE * #########
+    structCoeff =pd.merge(GLMcoeff,covarRasterPath, left_on="term", right_on="rasterName")
+    structCoeff = structCoeff.loc[structCoeff["PA-set"] == chosenPA]
+    structCoeff = structCoeff.loc[structCoeff["Pr(>|z|)"] < 0.05]
+    enviCoeff =pd.Series(structCoeff.coef.values, index=structCoeff.rasterPath).to_dict()    
+
+
+
+    ######### * COEFFICIENTS LAND USE DRAWN FROM GLM * #########
     
     #### coefs du glm global (landUse + variables continues)
-    
-    correspHabitat = pd.read_csv(os.path.join(NASpath,'IE_OFEV/Habitats/Hermine/unique_habitat_hermine_for_resistances_06janv26_with_expert_ranking.csv'))
+    GLMcoeff = pd.read_csv(GLMcoeffPath)   
+    GLMcoeff =  GLMcoeff.loc[GLMcoeff["term"].str.startswith("landUse")]
+    GLMcoeff["new_short_class"] =GLMcoeff["term"].str.replace("landUse","")
+    GLMcoeff.rename(columns={"Estimate" : "coef"}, inplace=True)
+    correspHabitat = pd.read_csv(correspHabitatPath)
     habCoefs = pd.merge( correspHabitat,GLMcoeff, on="new_short_class")
     habCoefs = habCoefs.loc[habCoefs["PA-set"] == chosenPA]
+    
+    
 
-    ### avis d'expert
+    ### * COEFFICENTS DRAWN FROM EXPERTS * #####
 
     '''
     habCoefs = pd.read_csv('/media/loreto/Grande/ie-ofev-24-25/sdm_hermine/res_expert/unique_habitat_hermine_for_resistances_06janv26_with_expert_ranking.csv')
@@ -89,29 +110,17 @@ if __name__=="__main__":
     habCoefs.rename(columns={'exp_ranking':'coef'},inplace=True)
     '''
 
-    ### coeff nuls (pour générer un modèle avec uniquement les covariables continues)
+    ### * NULL COEFFICIENTS (IF ONLY CONTINUOUS COVARIABLES ARE EVALUATED ) * ####
     '''
-    habCoefs = pd.read_csv('/media/loreto/Grande/ie-ofev-24-25/sdm_hermine/res_expert/unique_habitat_hermine_for_resistances_06janv26_with_expert_ranking.csv')
-    habCoefs["coef"] = 0
+    habCoefs = None
     '''
     ### coeff GLM effectué avec landUse only
-    #GLMcoeffHab = pd.read_csv('/media/luvil/T7_ROUGE/lolo/sdm_opportunistic_data/RSF_with_Reass_2_output/glm12_AGGR_BCKG_50m_nbPA_100000_nb_Draw_5.csv')
-    #GLMcoeffHab["new_short_class"] = GLMcoeffHab["term"].str.replace("landUse", "")
-    #GLMcoeff.rename(columns={"Estimate" : "coef"}, inplace=True)
-    #correspHabitat = pd.read_csv('/media/luvil/NAS_DEVELOPPEMENT/IE_OFEV/Habitats/Hermine/unique_habitat_hermine_for_resistances_02janv26.csv')
-    #habCoefs = pd.merge( correspHabitat,GLMcoeff, on="new_short_class")
-    #habCoefs = habCoefs.loc[habCoefs["PA-set"] == chosenPA]
+
 
     #####################################################################################
 
 
 
-    
-
-    structCoeff =pd.merge(GLMcoeff,covarRasterPath, left_on="new_short_class", right_on="rasterName")
-    structCoeff = structCoeff.loc[structCoeff["PA-set"] == chosenPA]
-    structCoeff = structCoeff.loc[structCoeff["Pr(>|z|)"] < 0.05]
-    enviCoeff =pd.Series(structCoeff.coef.values, index=structCoeff.rasterPath).to_dict()
     
     print("****** CONTINUOUS VARIABLE COEFFICIENTS ****** ")
     print(structCoeff[["rasterName","coef"]])

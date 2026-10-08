@@ -6,7 +6,7 @@ Created on Tue Jan 13 10:10:45 2026
 @author: loreto
 """
 
-
+print("******* WX TO RESISTANCES v1.0 *******")
 import rasterio as rio
 import numpy as np
 
@@ -25,20 +25,19 @@ CHmask = rio.open('zip+file:///media/loreto/NAS_DEVELOPPEMENT/IE_OFEV/Variables/
 
 
 
-src = rio.open('/media/loreto/Grande/ie-ofev-24-25/sdm_hermine/wx_GLM13_AGGR_BCKG_redone.tif')
+src = rio.open('/media/loreto/Grande/ie-ofev-24-25/sdm_hermine/wx_GLM_workshop2_AGGR_BCKG.tif')
 wx = src.read(1)
 
+truncation = True
 
-
-quantExp = np.nanquantile(wx[CHmask==1], q=[0.05,0.95])
+if truncation:
+    quantExp = np.nanquantile(wx[CHmask==1], q=[0.05,0.95])
+    wx[wx>=quantExp[1]] = quantExp[1]
+    wx[wx<=quantExp[0]] = quantExp[0]
 
 
 minExp = np.nanmin(wx[CHmask==1])
 maxExp = np.nanmax(wx[CHmask==1])
-
-
-wx[wx>=quantExp[1]] = quantExp[1]
-wx[wx<=quantExp[0]] = quantExp[0]
 
 print(f" ## min value of wx :  {minExp} max value of wx :  {maxExp} ##")
 print(f" quantile 5% :{quantExp[0]}, quantile  95%  : {quantExp[1]}")
@@ -51,10 +50,11 @@ out_meta.update({"driver": "GTiff",
                    })
 
 
-outFile = '/media/loreto/Grande/ie-ofev-24-25/sdm_hermine/res_raster_AggrBckg50m/output/resistances_glm13_redone.tif'
+outFile = '/media/loreto/Grande/ie-ofev-24-25/sdm_hermine/res_raster_allS_cleaned/resistances_GLM_workshop2_AGGR_BCKG.tif'
 print("--- writing output... ")
 try:
     with rio.open(outFile,"w",**out_meta) as dst:
             dst.write(resistance,1)   
 except Exception as exc:
     print("writing raster generated an exception : ", exc)
+print(" >>>> SCRIPT COMPLETED")

@@ -21,7 +21,8 @@ def computeRSF(enviCoeff, habRasterPath, habCoefs, x1,x2,y1,y2,k):
     with rio.open(habRasterPath) as habPath:
         habVar = habPath.read(1,window=Window.from_slices((y1, y2+1), (x1, x2+1)))
         
-        habTerm = np.empty(habVar.shape, dtype=np.dtype('float32'))
+        #habTerm = np.empty(habVar.shape, dtype=np.dtype('float32'))
+        habTerm = np.zeros(habVar.shape, dtype=np.dtype('float32'))
         ###entry coefficients of landuses
         ##create a dictionary for corrrespondances from a csv
         data_dict = habCoefs.set_index('value').to_dict()['coef']
@@ -40,37 +41,47 @@ def computeRSF(enviCoeff, habRasterPath, habCoefs, x1,x2,y1,y2,k):
             TermList.append((arr/1000)*enviCoeff[covar])
      
     #### stack everything #######   
-            TermStack=np.stack(TermList, axis=0)
-            sumTerms = np.sum(TermStack, axis=0, dtype=np.float32)
-            expsumTerms = np.exp(sumTerms, dtype=np.float32)
+    TermStack=np.stack(TermList, axis=0)
+    sumTerms = np.sum(TermStack, axis=0, dtype=np.float32)
+    expsumTerms = np.exp(sumTerms, dtype=np.float32)
     return expsumTerms
 
 def computeResistance(expRaster, minExp, maxExp):
-    hsI=(expRaster-minExp)/(maxExp-minExp)    
+    
+    hsI=(expRaster-minExp)/(maxExp-minExp)    ### transform betweeen 0 and 1
     kterm=np.exp(-1*4*hsI, dtype=np.float32)
     res = 100-99*((1-kterm)/(1-np.exp(-4, dtype=np.float32)))
-    return res
+    #return res
+    return expRaster
+    
 
 if __name__=="__main__":
     start = datetime.now()
 
     ################################ *** input parameters *** ###########################################
         
-    habRasterPath='/media/loreto/Grande/ie-ofev-24-25/variables/habitat_cerf_for_resistances/HabitatMap_cerf_07juil25_for_resistances.tif'
+    habRasterPath='/media/loreto/NAS_DEVELOPPEMENT/IE_OFEV/Habitats/Hermine/HabitatMap_v1_50_hermine_260106_Nibble2.tif'
     
-    habCoefs= pd.read_csv('/media/loreto/Grande/ie-ofev-24-25/ssf_jura/ssf_raster/unique_habitat_cerf_for_resistance_coef_22_model.csv')
+    habCoefs= pd.read_csv('/media/loreto/Grande/ie-ofev-24-25/sdm_hermine/res_raster_AggrBckg50m/unique_habitat_hermine_for_resistances_06janv26_coef_glm13_PA3.csv')
     
-    enviCoeff={'/media/loreto/NAS_DEVELOPPEMENT/IE_OFEV/Variables/LogScaled/Jura__Density_Buildings_100_opt2_scaled.tif':0.1569276,
-               '/media/loreto/NAS_DEVELOPPEMENT/IE_OFEV/Variables/LogScaled/Jura__Density_Merge_RoadPrimary__200_opt_scaled.tif':0.1541613,
-               '/media/loreto/NAS_DEVELOPPEMENT/IE_OFEV/Variables/LogScaled/Jura__Density_Merge_RoadSecondary_50_opt_scaled.tif':-0.3041774,
-               '/media/loreto/NAS_DEVELOPPEMENT/IE_OFEV/Variables/LogScaled/Jura__Density_Forest_400_opt2_scaled.tif':0.3176758,
-               '/media/loreto/NAS_DEVELOPPEMENT/IE_OFEV/Variables/LogScaled/Jura__Dist_Merge_Bati_16b_scaled.tif':0.1605695,
-               #'/media/loreto/NAS_DEVELOPPEMENT/IE_OFEV/Variables/LogScaled/Jura__Dist_Merge_RoadPrimary_16b_scaled.tif':0.0964482,
-               #'/media/loreto/NAS_DEVELOPPEMENT/IE_OFEV/Variables/LogScaled/Jura__Dist_Merge_Autobahn_16b_scaled.tif':0.0901117,
-               '/media/loreto/NAS_DEVELOPPEMENT/IE_OFEV/Variables/LogScaled/Jura__Dist_Merge_RoadSecondary_250701_16b_scaled.tif':-0.3298851,
-               '/media/loreto/NAS_DEVELOPPEMENT/IE_OFEV/Variables/Scaled/Jura__Altitude_5m_16b_scaled.tif':0.3157216,
-               '/media/loreto/NAS_DEVELOPPEMENT/IE_OFEV/Variables/Scaled/Jura__Exposition_5m_16b_scaled.tif':-0.0571324,
-               '/media/loreto/NAS_DEVELOPPEMENT/IE_OFEV/Variables/Scaled/Jura__Slope_5m_8b_scaled.tif':-0.2298444
+    enviCoeff={'/media/loreto/NAS_DEVELOPPEMENT/IE_OFEV/Variables/LogScaled/CHmax2500__Density_Buildings_100_opt2_scaled.tif':-0.39702,
+               '/media/loreto/NAS_DEVELOPPEMENT/IE_OFEV/Variables/LogScaled/CHmax2500__Density_SPBherb_50_optc_scaled.tif':0.1991684,
+               '/media/loreto/NAS_DEVELOPPEMENT/IE_OFEV/Variables/LogScaled/CHmax2500__Density_SPBlign_400_optc_scaled.tif':0.0993502,
+               '/media/loreto/NAS_DEVELOPPEMENT/IE_OFEV/Variables/LogScaled/CHmax2500__Density_Forest_400_opt2_scaled.tif':-0.4321434,
+               '/media/loreto/NAS_DEVELOPPEMENT/IE_OFEV/Variables/LogScaled/CHmax2500__Density_Grasslands_50_optc_scaled.tif':0.2414276,
+               #'/media/loreto/NAS_DEVELOPPEMENT/IE_OFEV/Variables/LogScaled/CHmax2500__Density_interfaces_ligneux_cultures_50_opt_scaled.tif':-0.0127027,
+               '/media/loreto/NAS_DEVELOPPEMENT/IE_OFEV/Variables/LogScaled/CHmax2500__Density_interfaces_ligneux_prairies_50_opt_scaled.tif':0.0807438,
+               '/media/loreto/NAS_DEVELOPPEMENT/IE_OFEV/Variables/LogScaled/CHmax2500__Dist_Habitat_Lakes_16b_scaled.tif':-0.4596374,
+               '/media/loreto/NAS_DEVELOPPEMENT/IE_OFEV/Variables/LogScaled/CHmax2500__Dist_Habitat_Ponds_32b_scaled.tif':-0.1890168,
+               '/media/loreto/NAS_DEVELOPPEMENT/IE_OFEV/Variables/LogScaled/CHmax2500__Dist_Merge_Rivers_16b_scaled.tif':-0.3014708,
+               '/media/loreto/NAS_DEVELOPPEMENT/IE_OFEV/Variables/LogScaled/CHmax2500__Dist_Merge_Bati_16b_scaled.tif':-0.505005,
+               '/media/loreto/NAS_DEVELOPPEMENT/IE_OFEV/Variables/LogScaled/CHmax2500__Dist_Merge_Autobahn_16b_scaled.tif':-0.1406077,
+               '/media/loreto/NAS_DEVELOPPEMENT/IE_OFEV/Variables/LogScaled/CHmax2500__Dist_Merge_RoadPrimary_16b_scaled.tif':-0.2557935,
+               '/media/loreto/NAS_DEVELOPPEMENT/IE_OFEV/Variables/LogScaled/CHmax2500__Dist_Merge_RoadSecondary_250701_16b_scaled.tif':-0.7536786,
+               '/media/loreto/NAS_DEVELOPPEMENT/IE_OFEV/Variables/LogScaled/CHmax2500__Dist_Merge_Paths_16b_scaled.tif':-0.399277,
+               '/media/loreto/NAS_DEVELOPPEMENT/IE_OFEV/Variables/Scaled/CHmax2500__Altitude_5m_16b_scaled.tif':0.5758556,
+               #'/media/loreto/NAS_DEVELOPPEMENT/IE_OFEV/Variables/Scaled/CHmax2500__Exposition_5m_16b_scaled.tif':0.0237715,
+               '/media/loreto/NAS_DEVELOPPEMENT/IE_OFEV/Variables/Scaled/CHmax2500__Slope_5m_8b_scaled.tif':-1.0647476
                }
                      
                        
@@ -79,7 +90,7 @@ if __name__=="__main__":
         
         
         
-    outFile = '/media/loreto/Grande/ie-ofev-24-25/ssf_jura/ssf_raster/output/resistance_cerf_jura_19_sep_25_model20.tif'
+    outFile = '/media/loreto/Grande/ie-ofev-24-25/sdm_hermine/res_raster_AggrBckg50m/output/wx_hermine_AggrBckg50m_glm13_PA3_06janv26.tif'
     
     ############################################################################################3
         
@@ -95,10 +106,11 @@ if __name__=="__main__":
                
         print("#"*10)
         print("input raster features : ")
+        print(f"dtype : {inp.dtypes}")
         print(f"{nrow} row X {ncol} columns ")
         print(f"cell size : {cellSize}")
         print(f"'nodata' code : {inp.nodata}")
-    
+        
         print("number of tiles :")
         print(f"{nbSplitY} tiles per row X {nbSplitX} tiles per column")
     
@@ -133,12 +145,12 @@ if __name__=="__main__":
                    minExp.append(np.min(finResults[poolDF[future]]))
                    maxExp.append(np.max(finResults[poolDF[future]]))
                    print(f"tile {poolDF[future]} done")
+
                 except Exception as exc:
                     print('%r generated an exception: %s' % (poolDF[future], exc))
     
     
     ######### ***GATHERING RESULTS **** ########
-        
         
     tmpRow=[]
     smallerExp=min(minExp)
@@ -153,23 +165,31 @@ if __name__=="__main__":
 
 
 
-    for i in tmpRow:
-        print(f"{i.shape[0]} rows  : {i.shape[1]} columns")
-       
-        finalMat=np.vstack(tuple([i for i in tmpRow])).astype(np.int16)
-        
-        print("row stacking done")
-        print("  ##############  ARRAY DONE  ###########")
-        print(f" -- final array size : {finalMat.shape[0]} rows X {finalMat.shape[1]} columns")
-        print (f" total elapsed time : {datetime.now()-start}")
-        print(f"smaller value of minExp : {min(minExp)}, bigger value of maxExp : {max(maxExp)} ")
-        
-        out_meta.update({"driver": "GTiff",
-                         "height": finalMat.shape[0],
-                         "width": finalMat.shape[1],
-                         "dtype":"int16",
-                         "nodata":-9999
-                         })
+    #print(f"{i.shape[0]} rows  : {i.shape[1]} columns")
+   
+    #finalMat=np.vstack(tuple([i for i in tmpRow])).astype(np.int16)
+    finalMat=np.vstack(tuple([i for i in tmpRow]))
+    
+    print("row stacking done")
+    print("  ##############  ARRAY DONE  ###########")
+    print(f" -- final array size : {finalMat.shape[0]} rows X {finalMat.shape[1]} columns")
+    print (f" total elapsed time : {datetime.now()-start}")
+    print(f"smaller value of minExp : {smallerExp}, bigger value of maxExp : {biggerExp} ")
+    
+    # out_meta.update({"driver": "GTiff",
+    #                  "height": finalMat.shape[0],
+    #                  "width": finalMat.shape[1],
+    #                  "dtype":"int16",
+    #                  "nodata":-9999
+    #                  })
+   
+    out_meta.update({"driver": "GTiff",
+                     "height": finalMat.shape[0],
+                     "width": finalMat.shape[1],
+                     "dtype":"float32",
+                     "nodata":np.nan
+                     })
+
     
     print("-- writing raster... ")
     try:
@@ -177,4 +197,4 @@ if __name__=="__main__":
                 dst.write(finalMat,1)   
     except Exception as exc:
         print("writing raster generated an exception : ", exc)
-        print(" >>>> SCRIPT COMPLETED")
+    print(" >>>> SCRIPT COMPLETED")

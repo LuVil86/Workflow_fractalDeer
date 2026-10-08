@@ -9,14 +9,18 @@ Created on Tue Oct 10 12:10:17 2023
 #import libs
 import rasterio
 import os
+import sys
 import geopandas as gpd
 from rasterio.mask import mask
+
 ####### **** Input parameters ***** ########
-CScapeFolder="/media/loreto/Grande/ie-ofev-24-25/csc_cerf_jura/tuile_20"
 
-shpFolder="/media/loreto/Grande/ie-ofev-24-25/csc_cerf_jura/grille_3000_jura"
+CScapeFolder="/home/loreto/Documents/ebedu/Resultats_LU/tuile_c1_1"
 
-outFolder="/media/loreto/Grande/ie-ofev-24-25/csc_cerf_jura/cut_tuile_20"
+shpFolder="/home/loreto/Documents/ebedu/ebedu_milieux/study_area/grille_5000_from_extent"
+
+outFolder="/home/loreto/Documents/ebedu/Resultats_LU/cut_tuile_c1_1"
+
 ###### *************************** #########
 
 if __name__=="__main__":
@@ -25,6 +29,13 @@ if __name__=="__main__":
     print(f"folder with shapefiles as extend : {shpFolder}")
     print(f"output folder : {outFolder}")
     print("*"*100)
+    
+    if not os.path.exists(outFolder):
+	    print("the specified output folder does not exists :: creating it")
+	    os.makedirs(outFolder)
+        
+    assert os.path.isdir(CScapeFolder)
+    
     for file in os.listdir(CScapeFolder):
         if file.endswith(".asc"):
             tileNumber=file.split("_")[1]
