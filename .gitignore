@@ -1,0 +1,27 @@
+
+
+
+# R generated files #
+######################
+
+*.Rhistory
+Rplots.pdf
+# Python generated files #
+#########################
+
+__pycache__/
+*.pyc
+
+# anything that is produced by the demo #
+#########################################
+PIPELINE_FRACTALDEER/demo_data/*
+
+
+# except the demo data of course :) #
+#####################################
+!PIPELINE_FRACTALDEER/demo_data/Bajo/deerYear_2016-2017/Bajo_deerYear_2016-2017.csv
+
+# In case lolo makes a git mistake #
+####################################
+select_variables.*
+tmp.*

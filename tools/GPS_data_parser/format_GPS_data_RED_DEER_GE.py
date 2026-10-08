@@ -171,7 +171,7 @@ for animalName in set(allDat["prenom"]):
     
     csvPath=os.path.join(resultPath,f"{animalName}_allFixes_formatted.csv")
     if not os.path.isfile(csvPath) or overwrite:
-        subset_cerf.to_csv(os.path.join(resultPath,f"{animalName}_allFixes_formatted.csv"), index=False)   
+        subset_cerf.to_csv(csvPath, index=False)   
         subset_cerf.drop(["UTC_DATE", "UTC_TIME"],axis=1).to_file(os.path.join(workDir,"RED_DEER_GE_allFixes_formatted.gpkg"), driver='GPKG', layer=str(animalName))
         
     else:

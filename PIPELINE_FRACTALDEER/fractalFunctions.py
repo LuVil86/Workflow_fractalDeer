@@ -551,7 +551,9 @@ def getBehaviourVector(selectedStep:int,
 
     df_selected=computeVFractal(selectedStep, trajData, getGeoDataFrame=True,successive=successive)
     df_selected["diffNearest"]=df_selected["nearestNextPoint"]-df_selected["nearestPoint"]
-    corrDF=pd.DataFrame({"angN":df_selected["angleList"][:-1].reset_index(drop=True),"angNplus1":df_selected["angleList"][1:].reset_index(drop=True),"diffNearest":stats.zscore(df_selected["diffNearest"][:-1],nan_policy="omit").reset_index(drop=True)})
+    corrDF=pd.DataFrame({"angN":pd.Series(df_selected["angleList"][:-1]).reset_index(drop=True),
+                         "angNplus1":pd.Series(df_selected["angleList"][1:]).reset_index(drop=True),
+                         "diffNearest":pd.Series(stats.zscore(df_selected["diffNearest"][:-1],nan_policy="omit")).reset_index(drop=True)})
     #complete=pd.DataFrame({"angN":[0], "angNplus1":[0]})
     
 
@@ -1093,3 +1095,142 @@ def fractalMultiProcess(run,gdf_cerf,stepVector, randomProportion=0.10, fixedPro
     print(f"run {run+1} complete")
     return df_stat_sim
         
+
+
+
+
+###############################################################################
+###############3 **** SHOW MULTIPLE TRAJECTORIES IN A SINGLE PLOT **** ########
+#################################################################################
+
+
+
+
+def showMultipleTrajectoriesOnMap(gdf_list, backgroundRaster=None, groupBy="prenom", savePlot=False, workDir="", plotNames=None):
+    """
+    Affiche plusieurs trajectoires sur le même graphique.
+    gdf_list : Une liste de GeoDataFrames (un par individu/trajectoire) ou un unique GeoDataFrame contenant tout le monde.
+    plotNames : Une liste de noms (str) correspondante à chaque GeoDataFrame pour le titre/sauvegarde (optionnel).
+    """
+    # 1. Harmonisation de l'entrée : si on passe un seul GeoDataFrame, on le met dans une liste
+    if isinstance(gdf_list, gp.GeoDataFrame):
+        gdf_list = [gdf_list]
+    elif not isinstance(gdf_list, list) or not all(isinstance(x, gp.GeoDataFrame) for x in gdf_list):
+        print("input data must be a GeoDataFrame or a list of GeoDataFrames")
+        raise ValueError
+
+    colorSeasons = {1: "greenyellow", 2: "orangered", 3: "goldenrod", 4: "lightskyblue"}
+    base = 10 
+
+    # 2. Calcul des limites globales combinant tous les GeoDataFrames
+    all_bounds = np.array([gdf.total_bounds for gdf in gdf_list]) # [minx, miny, maxx, maxy]
+    global_bounds = [
+        all_bounds[:, 0].min(),  # minx global
+        all_bounds[:, 1].min(),  # miny global
+        all_bounds[:, 2].max(),  # maxx global
+        all_bounds[:, 3].max()   # maxy global
+    ]
+
+    # 3. Gestion du fond de carte et de la figure
+    if backgroundRaster is not None:
+        from shapely.geometry import box
+        import rasterio as rio
+        from rasterio.mask import mask
+        
+        # Utilisation des limites globales avec le buffer
+        cerf_bounds = box(*global_bounds)
+        cerf_bounds = cerf_bounds.buffer(distance=4000, resolution=1).envelope
+        geo_bounds = gp.GeoDataFrame({"geometry": cerf_bounds}, index=[0], crs=gdf_list[0].crs)
+  
+        habitat = rio.open(backgroundRaster)
+        def getFeatures(gdf):
+            return [jsn.loads(gdf.to_json())['features'][0]['geometry']]
+            
+        coords = getFeatures(geo_bounds)
+        out_image, out_transform = mask(dataset=habitat, shapes=coords, crop=True)
+        out_meta = habitat.meta
+        out_meta.update({
+            "driver": "GTiff",
+            "height": out_image.shape[1],
+            "width": out_image.shape[2],
+            "transform": out_transform
+        })
+        
+        cropped_path = f"cropped_{os.path.basename(backgroundRaster)}"
+        with rio.open(cropped_path, "w", **out_meta) as dest:
+            dest.write(out_image)
+        clipped = rio.open(cropped_path)
+        
+        fig, ax = plt.subplots(tight_layout=True, figsize=(base, base), facecolor="white")
+        rio.plot.show(clipped, ax=ax, cmap="Greys")
+    else:
+        xSize = global_bounds[2] - global_bounds[0]
+        ySize = global_bounds[3] - global_bounds[1]
+        yRatio = xSize / ySize
+        if yRatio < 1:
+            fig, ax = plt.subplots(figsize=(base, base / yRatio), facecolor="white")
+        else:
+            fig, ax = plt.subplots(figsize=(base * yRatio, base), facecolor="white")
+
+    # 4. Barre d'échelle
+    fontprops = fm.FontProperties(size=10)
+    scalebar = AnchoredSizeBar(ax.transData,
+                                5000,
+                                '5 km',
+                                'upper center', 
+                                pad=0.5,
+                                color='black',
+                                size_vertical=1,
+                                fontproperties=fontprops)
+    ax.add_artist(scalebar)
+
+    # 5. Boucle pour tracer chaque trajectoire de la liste
+    el = patches.Ellipse((2, -1), 0.5, 0.5)
+    
+    for i, subset_cerf in enumerate(gdf_list):
+        # On définit un label ou un préfixe pour distinguer les individus si groupBy == "saison"
+        label_prefix = f"{subset_cerf.prenom.unique()[0]} - " if len(gdf_list) > 1 else ""
+
+        if groupBy == "saison":
+            # Note: Assurez-vous que la fonction mapSeasonIndex est bien définie dans votre script
+            subset_cerf["saisonIndex"] = subset_cerf["saison"].apply(mapSeasonIndex)
+            groups = subset_cerf.groupby(["saisonIndex"])
+            for name, group in groups:
+                ax.plot(np.array(group["geometry"].x), np.array(group["geometry"].y), 
+                        marker="o", linestyle="-", linewidth=3, 
+                        label=f"{label_prefix}{str(group['saison'].unique()[0])}", 
+                        alpha=0.4, color=colorSeasons[group.saisonIndex.unique()[0]])
+        else:
+            groups = subset_cerf.groupby(["prenom"])
+            for name, group in groups:
+                ax.plot(group["geometry"].x, group["geometry"].y, linestyle="-", linewidth=3, label=name)
+
+        # Ajout des marqueurs START et FINISH pour chaque trajectoire
+        ax.annotate(f"START ({subset_cerf.prenom.unique()[0]})", 
+                    xy=(subset_cerf.iloc[0].geometry.x, subset_cerf.iloc[0].geometry.y),    
+                    xytext=(-20, -10), textcoords='offset points', size=8,
+                    arrowprops=dict(arrowstyle="simple", fc="black", ec="none", patchB=el, connectionstyle="arc3,rad=0.3"))
+        
+        ax.annotate(f"FINISH ({subset_cerf.prenom.unique()[0]})", 
+                    xy=(subset_cerf.iloc[-1].geometry.x, subset_cerf.iloc[-1].geometry.y), 
+                    xytext=(20, 10), textcoords='offset points', size=8,
+                    arrowprops=dict(arrowstyle="simple", fc="black", ec="none", patchB=el, connectionstyle="arc3,rad=0.3"))
+
+    # 6. Titre global
+    if plotNames:
+        ax.set_title(f"Observed paths: {', '.join(plotNames)}")
+    else:
+        all_names = [gdf.prenom.unique()[0] for gdf in gdf_list]
+        ax.set_title(f"Observed paths: {', '.join(list(set(all_names)))}")
+                            
+    ax.legend(loc="lower left", fontsize=8, framealpha=1, markerscale=2)
+
+    # 7. Sauvegarde du graphique combiné
+    if savePlot:
+        save_name = f"multiple_paths_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png"
+        if plotNames:
+            save_name = f"{'_'.join(plotNames)}_observed_path.png"
+        
+        resultPath = os.path.join(workDir, "multi_trajectories")
+        os.makedirs(resultPath, exist_ok=True)
+        plt.savefig(os.path.join(resultPath, save_name), transparent=False)

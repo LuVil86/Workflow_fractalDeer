@@ -1,0 +1,51 @@
+name: pipeline_fractalDeer_prd
+channels:
+  - conda-forge
+  - defaults
+  - https://repo.anaconda.com/pkgs/main
+  - https://repo.anaconda.com/pkgs/r
+dependencies:
+  - adjustText
+  - geopandas
+  - h5py
+  - ipython
+  - matplotlib
+  - numpy
+  - pandas
+  - python=3.10
+  - pytz
+  - r-base=4.3
+  - rasterio
+  - scikit-learn
+  - scipy
+  - seaborn
+  - Shapely
+  - tslearn
+  - ipykernel
+  - jupyter
+  - notebook
+
+  - r-adehabitatLT
+  - r-amt
+  - r-arulesViz
+  - r-car
+  - r-dplyr
+  - r-FactoMineR
+  - r-fs
+  - r-gdata
+  - r-ggplot2
+  - r-ggtext
+  - r-gridExtra
+  - r-lubridate
+  - r-MASS
+  - r-mclust
+  - r-multidplyr
+  - r-readr
+  - r-rmarkdown
+  - r-rstudioapi
+  - r-snow
+  - r-stringr
+  - r-tidyverse
+  - r-zoo
+variables:                      
+  PYTHONNOUSERSITE: "1"

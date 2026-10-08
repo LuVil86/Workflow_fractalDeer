@@ -9,10 +9,10 @@
 
 ### ---Input---
 # - the output table generated from the "get_Zscores_CRW.R" script
-# - the metric you want to compute statistics on. by default, "ratio_meanNSD"
+# 
 
 ### --output ---
-## a .csv table with the calculated statistics
+## a .csv table with the calculated statistics for meanNSD,cumulativeNSD and endNSD
 
 #############################################################################
 
@@ -250,17 +250,22 @@ coordSplit<-function(x){
     sub<-subset(finDat, finDat$behaviour!="b_-1")
     sub<-drop.levels(sub)
     chisq_raw_endNSD<-kruskal.test(sub[,"ratio_endNSD"]~sub[,"behaviour"])  
+    N_endNSD <- sum(!is.na(sub[,"ratio_endNSD"]))
+    
     chisq_raw_meanNSD<-kruskal.test(sub[,"ratio_meanNSD"]~sub[,"behaviour"])  
+    N_meanNSD <- sum(!is.na(sub[,"ratio_meanNSD"]))
+    
     chisq_raw_cumulativeNSD<-kruskal.test(sub[,"ratio_cumulativeNSD"]~sub[,"behaviour"])  
-
+    N_cumNSD <- sum(!is.na(sub[,"ratio_cumulativeNSD"]))
+    
   }
   
   
   endNSDlist<-data.frame(prenom=selectedDeer, 
              deerYear=selectedYear,
              stepSize=as.numeric(selectedStepSize),
-             chisq.raw=as.numeric(chisq_raw_endNSD$statistic),
-             chisq.raw.pval=as.numeric(chisq_raw_endNSD$p.value),
+             chisq.ESS=as.numeric(chisq_raw_endNSD$statistic/N_endNSD),
+             chisq.pval=as.numeric(chisq_raw_endNSD$p.value),
              fullPath=behaviourFile,
              parameter="endNSD"
  			 ) 
@@ -268,8 +273,8 @@ coordSplit<-function(x){
   meanNSDlist<-data.frame(prenom=selectedDeer, 
              deerYear=selectedYear,
              stepSize=as.numeric(selectedStepSize),
-             chisq.raw=as.numeric(chisq_raw_meanNSD$statistic),
-             chisq.raw.pval=as.numeric(chisq_raw_meanNSD$p.value),
+             chisq.ESS=as.numeric(chisq_raw_meanNSD$statistic/N_meanNSD),
+             chisq.pval=as.numeric(chisq_raw_meanNSD$p.value),
              fullPath=behaviourFile,
              parameter="meanNSD"
  			 ) 			 
@@ -277,8 +282,8 @@ coordSplit<-function(x){
   cumulativeNSDlist<-data.frame(prenom=selectedDeer, 
              deerYear=selectedYear,
              stepSize=as.numeric(selectedStepSize),
-             chisq.raw=as.numeric(chisq_raw_cumulativeNSD$statistic),
-             chisq.raw.pval=as.numeric(chisq_raw_cumulativeNSD$p.value),
+             chisq.ESS=as.numeric(chisq_raw_cumulativeNSD$statistic/N_cumNSD),
+             chisq.pval=as.numeric(chisq_raw_cumulativeNSD$p.value),
              fullPath=behaviourFile,
              parameter="cumulativeNSD"
  			 )			 
@@ -289,8 +294,9 @@ coordSplit<-function(x){
 
 ############ *** input parameters parsing ***** ################
 
-cat("\n****** CHOOSE_BEST_STEPSIZES.R ********\n")
-
+cat("\n********************************************\n")
+cat("\n****** S5 : CHOOSE_BEST_STEPSIZES.R ********\n")
+cat("\n********************************************\n")
 cerf_path<-commandArgs(trailingOnly = T)
 inFolder=cerf_path[1]
 tmpPath=unlist(strsplit(inFolder, "/"))
@@ -354,17 +360,17 @@ for(k in 1:nrow(stepSizeList)){
 
 tot1<-tot1<-do.call(rbind, lapply(allChisq, `[[`, 1))
 tot1<-cbind(tot1, zscore=stepSizeList$zscore)
-tot1<-tot1[with(tot1, order(-zscore, -chisq.raw)), ]
+tot1<-tot1[with(tot1, order(-zscore, -chisq.ESS)), ]
 
 
 tot2<-do.call(rbind, lapply(allChisq, `[[`, 2))
 tot2<-cbind(tot2, zscore=stepSizeList$zscore)
-tot2<-tot2[with(tot2, order(-zscore, -chisq.raw)), ]
+tot2<-tot2[with(tot2, order(-zscore, -chisq.ESS)), ]
 
 
 tot3<-do.call(rbind, lapply(allChisq, `[[`, 3))
 tot3<-cbind(tot3, zscore=stepSizeList$zscore)
-tot3<-tot3[with(tot3, order(-zscore, -chisq.raw)), ]
+tot3<-tot3[with(tot3, order(-zscore, -chisq.ESS)), ]
 
 outNameSplit<-unlist(strsplit(path_file(stepSizeListName), split="_"))
 outSuffix<-paste(selectedDeer, selectedYear, outNameSplit[6], outNameSplit[7]
@@ -373,7 +379,7 @@ write.csv(tot1, file=paste0(inFolder,"/results_Chisq_endNSD_",outSuffix) , row.n
 write.csv(tot2, file=paste0(inFolder,"/results_Chisq_meanNSD_",outSuffix) , row.names=F)
 write.csv(tot3, file=paste0(inFolder,"/results_Chisq_cumulativeNSD_",outSuffix) , row.names=F)
 
-
+cat("\n >>>> Script S5 Done ! <<<<< \n")
 
 
 

@@ -38,6 +38,7 @@ refineClusteringByNSD<-function (behaviourFile,
                                     optimum")}
   
   #################### load packages and functions ############################################
+    suppressPackageStartupMessages({
   require(gridExtra)
   require(multidplyr)
   require(tidyverse)
@@ -52,6 +53,7 @@ refineClusteringByNSD<-function (behaviourFile,
   require(grid)
   require(FactoMineR)
   require(fs)
+  })
   sourceDir <- function(path, trace = TRUE, ...) {
     op <- options(); on.exit(options(op)) # to reset after each 
     for (nm in list.files(path, pattern = "[.][RrSsQq]$")) {
@@ -103,7 +105,7 @@ refineClusteringByNSD<-function (behaviourFile,
 
   ################### COMPUTE SUB-PATH MEASURES FROM THE INPUT #################################33
   datCerfs$NSD_fullPath<-datCerfs%>%amt::make_track(.,x,y,t, crs=2056, all_cols = TRUE)%>%nsd()
-  
+  print("computing...")
   #####################################################################################################
   NSD<-c()
   sl_<-c()
@@ -273,7 +275,6 @@ refineClusteringByNSD<-function (behaviourFile,
   # )
   
   BIC <- mclustBIC(finDat[,chosenParameter], G=2)
-  print(BIC)
   mod1 <- Mclust(finDat[,chosenParameter], x = BIC)
   
   if (save.BIC==TRUE){

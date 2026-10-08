@@ -86,9 +86,9 @@ coordSplit<-function(x){
 }
 
 ############ *** input parameters parsing ***** ################
-
-cat("\n****** CHOOSE_BEST_STEPSIZES.R ********\n")
-
+cat("\n***************************************\n")
+cat("\n****** S5 : CHOOSE_BEST_STEPSIZES.R ********\n")
+cat("\n***************************************\n")
 cerf_path<-commandArgs(trailingOnly = T)
 inFolder=cerf_path[1]
 tmpPath=unlist(strsplit(inFolder, "/"))
@@ -160,7 +160,7 @@ outSuffix<-paste(selectedDeer, selectedYear, outNameSplit[6], outNameSplit[7]
   ,sep="_")
 write.csv(tot, file=paste0(inFolder,"/results_Chisq_raw_refined_",parameter,"_",outSuffix) , row.names=F)
 
-
+cat("\n =====> Script S5 Done ! <=======\n")
 #finChisq$key1<-paste(finChisq$prenom, finChisq$deerYear, sep="_")
 #ggplot(aes(x=stepSize, y=chisq.raw, colour=key1), data=finChisq)+geom_point()+geom_line()
 

@@ -61,8 +61,9 @@ trajCerf<-readr::read_csv(cerf_path[1],show_col_types = FALSE)%>%
   #filter(deerYear==selectedYear)%>%
   droplevels()%>%
   TrajFromCoords(xCol="coord_X", yCol="coord_Y",spatialUnits = "m")
-
+print("mean step length of the whole trajectory : ")
 print(exp(mean(log(TrajStepLengths(trajCerf))[log(TrajStepLengths(trajCerf))!=-Inf])))
+print("standard deviation step length of the whole trajectory : ")
 print( sd(TrajStepLengths(trajCerf)))
 #hist(TrajStepLengths(trajCerf),breaks = 100,main = " histogram of step_length [m]")
 ## generate correlated random walk from stepLength mean :
@@ -92,5 +93,6 @@ trjSim_scaled<-data.frame(prenom=paste(selectedDeer,"_CRW",sep=""),
                           ycoord=trjSim$y+trajCerf$y[1],
                           dateTime=trajCerf$dateTime)
 outFile=paste0(cerf_path[2],"/Simulated_CRW_",selectedDeer,"_", selectedYear,".csv")
-
+trjSim_scaled$geometry = apply(trjSim_scaled, 1, function(row) paste0("POINT (", row["xcoord"]," ",row["ycoord"],")"))
 write.csv(trjSim_scaled, file=outFile)
+cat("--> CRW trajectory successfuly generated in \n",outFile,"\n")
