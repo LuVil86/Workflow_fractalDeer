@@ -32,12 +32,11 @@ you can run the following command with the demo data (locate yourself in /PIPELI
 This will automatically create an "OUT_{}" folder in the specified path
 
 
-If you want to use the jupyter-notebook demo, you need to activate the environment and build the ipykernel within the conda environment. NOTE the path to conda environements are probably different in your machine, so change accordingly
-
+If you want to use the jupyter-notebook demo, you need to activate the environment and build the ipykernel within the conda environment. 
 ```         
 python -m ipykernel install --user --name pipeline_fractalDeer_prd --display-name "Conda (pipeline_fractalDeer)"
 ```
-then run jupyter-notebook
+then run the jupyter-notebook.
 ```         
 jupyter-notebook ./PIPELINE_FRACTALDEER/interactive_demo.ipynb
 ```
