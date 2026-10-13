@@ -18,6 +18,7 @@ dependencies:
   - rasterio
   - scikit-learn
   - scipy
+  - astral
   - seaborn
   - Shapely
   - tslearn

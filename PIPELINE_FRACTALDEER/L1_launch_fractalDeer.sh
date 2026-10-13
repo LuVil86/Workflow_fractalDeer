@@ -20,12 +20,12 @@ cd "$(dirname "$0")"
 
 currentEnvir=$(echo $CONDA_PREFIX | awk -F "/" '{print $NF}')
 echo "current Environment : " ${currentEnvir}
-if [[ "${currentEnvir}" != "pipeline_fractalDeer" ]]
+if [[ "${currentEnvir}" != "pipeline_fractalDeer_prd" ]]
 then
-echo "current environment is not 'pipeline_fractalDeer' : aborting execution"
+echo "current environment is not 'pipeline_fractalDeer_prd' : aborting execution"
 echo " - in case you haven't created the environment, run the 'environment_fractalDeer.yml' file in conda "
-echo "   with the command 'conda env create -f ./Workflow_fractalDeer/PIPELINE_FRACTALDEER/environment_fractalDeer.yml' "
-echo "   and activate it using the commmand 'conda activate pipeline_fractalDeer'"
+echo "   with the command 'conda env create -f ./Workflow_fractalDeer/PIPELINE_FRACTALDEER/environment_fractalDeer_PRD.yml' "
+echo "   and activate it using the commmand 'conda activate pipeline_fractalDeer_prd'"
 
 exit 2
 fi
