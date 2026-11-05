@@ -92,7 +92,7 @@ refineClusteringByNSD<-function (behaviourFile,
   datCerfs<-readr::read_csv(behaviourFile)%>%
     mutate(coord_X=apply(as.data.frame(geometry), 1,function(x) coordSplit(x)$coordX ))%>%
     mutate(coord_Y=apply(as.data.frame(geometry), 1,function(x) coordSplit(x)$coordY ))%>%
-    mutate(dateTime=as.POSIXct(paste(UTC_DATE, UTC_TIME, sep=" "), origin="1970-01-01", tz="UTC"))%>%
+    mutate(dateTime=as.POSIXct(dateTime, origin="1970-01-01", tz="UTC"))%>%
     mutate(behaviour=factor(paste("b", behaviour, sep="_")))%>%
     mutate(deerYear=factor(deerYear))%>%
     mutate(prenom=factor(prenom))%>%
@@ -428,19 +428,19 @@ refineClusteringByNSD<-function (behaviourFile,
     chisq_refined<-kruskal.test(finDat[,parameter]~finDat[,"behaviour"])  
   }
   
-  testStats<-data.frame(prenom=animalTest, 
-             deerYear=yearTest,
-             stepSize=as.numeric(stepSize),
-             chisq.raw=as.numeric(chisq_raw$statistic),
-             chisq.raw.pval=as.numeric(chisq_raw$p.value),
-             Ttest.raw=as.numeric(Ttest_raw$statistic),
-             Ttest.raw.pval=as.numeric(Ttest_raw$p.value),
-             chisq.refined=as.numeric(chisq_refined$statistic),
-             chisq.refined.pval=as.numeric(chisq_refined$p.value),
-             Ttest.refined=as.numeric(Ttest_refined$statistic),
-             Ttest.refined.pval=as.numeric(Ttest_refined$p.value)
-  )
-  
+  # testStats<-data.frame(prenom=animalTest, 
+  #            deerYear=yearTest,
+  #            stepSize=as.numeric(stepSize),
+  #            chisq.raw=as.numeric(chisq_raw$statistic),
+  #            chisq.raw.pval=as.numeric(chisq_raw$p.value),
+  #            Ttest.raw=as.numeric(Ttest_raw$statistic),
+  #            Ttest.raw.pval=as.numeric(Ttest_raw$p.value),
+  #            chisq.refined=as.numeric(chisq_refined$statistic),
+  #            chisq.refined.pval=as.numeric(chisq_refined$p.value),
+  #            Ttest.refined=as.numeric(Ttest_refined$statistic),
+  #            Ttest.refined.pval=as.numeric(Ttest_refined$p.value)
+  # )
+  # 
   
   #  corresp_pathNo<-datCerfs[,c("path_no", "new_path_no")]
   # corresp_pathNo<-corresp_pathNo[!duplicated(corresp_pathNo),]
@@ -531,7 +531,7 @@ refineClusteringByNSD<-function (behaviourFile,
     }
   #datCerfs%>%dplyr::select(-c("NSD"))%>%return()
   if(return=="Chisq"){
-  return(testStats)
+  return(1)
   }else{
     datCerfs%>%dplyr::select(-c("NSD"))%>%return()
   }

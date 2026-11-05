@@ -1,17 +1,49 @@
 #!/bin/bash
 
-cd ~/Workflow_fractalDeer/PIPELINE_FRACTALDEER
+if [[ -z $1 ]]
+then
+    echo "you must specify an input folder where the trajectories are located !!"
+    exit 2
+fi
 
-inFolder="/home/luvil/IE-OFEV/new_cerfs_valais_2025/trajectories_denoised/"
-outFolder="~/IE-OFEV/results_Valais"
+if [[ -z $2 ]]
+then
+    echo "you must specify an output folder location !!"
+    exit 2
+fi
 
-for inFile in $(ls ${inFolder})
+inFolder=$1
+outFolder=$2
+
+if [[ ! -d $inFolder ]]
+then
+    echo "the input folder does not exist : aborting script"
+    exit 2
+fi
+
+if [[ -z $(shopt -s nullglob; echo "$inFolder"/*) ]]
+then
+    echo "the input folder is empty : aborting script"
+    exit 2
+fi
+
+if [[ ! -d $outFolder ]]
+then
+    echo "the output folder specified does not exist : creating it.."
+    mkdir -p "$outFolder"
+fi
+
+for inFilePath in "$inFolder"/*
 do
-	echo ${inFile}
-	eval /home/luvil/Workflow_fractalDeer/PIPELINE_FRACTALDEER/L1_launch_fractalDeer.sh ${inFolder}${inFile} ${outFolder}
-	if [[ $? -eq 2 ]]
-	then
-		echo "LAUNCHER- One of the pipeline in the list failed :: aborting launcher"
-	exit 2
-	fi
-done 
+    inFile=$(basename "$inFilePath")
+    
+    echo "${inFile}"
+    
+    ~/Workflow_fractalDeer/PIPELINE_FRACTALDEER/L1_launch_fractalDeer.sh "${inFolder}/${inFile}" "${outFolder}"
+    
+    if [[ $? -eq 2 ]]
+    then
+        echo "LAUNCHER- One of the pipeline in the list failed :: aborting launcher"
+        exit 2
+    fi
+done

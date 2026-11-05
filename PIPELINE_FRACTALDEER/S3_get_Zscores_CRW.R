@@ -29,6 +29,7 @@ suppressPackageStartupMessages({
   require(trajr)
   require(gdata)
   require(tidyverse)
+  require(crayon)
 ################################## GRAPHIC PACKAGES FOR PLOTTING : useless for the pipeline mode ################
 # if(!require(gridExtra)) {
 #   install.packages("gridExtra"); require(gridExtra)}
@@ -49,6 +50,13 @@ suppressPackageStartupMessages({
 #   install.packages("FactoMineR"); require(FactoMineR)}
 
 })
+
+############ *** input parameters parsing ***** ################
+cyan  <- cyan
+bold  <- bold
+cat(cyan("\n********************************************\n"))
+cat(cyan$bold("****** S3 : GET_ZSCORES_CRW.R ********\n"))
+cat(cyan("********************************************\n\n"))
 
 cerf_path<-commandArgs(trailingOnly = T)
 inFolder=cerf_path[1]

@@ -67,7 +67,7 @@ def launcher(inFilePath,outDir,prenom,deerYear, stepSize, check_existing_file):
     tmpOut=subset_cerf.copy()
     tmpOut["behaviour"]=behaviourVector
     tmpOut["path_no"]=pathNo
-    tmpOut.drop(columns=["dateTime"],axis=1).iloc[:, 1:].to_csv(outFile, index=False)
+    tmpOut.to_csv(outFile, index=False)
     finSTR = f"---> behaviour vector for stepSize {stepSize} successfully added. The output file is {outFile}"
     #### output of step classification file #####
     #stepOut=behaviourDF.copy()
@@ -81,9 +81,11 @@ def launcher(inFilePath,outDir,prenom,deerYear, stepSize, check_existing_file):
 
 
 def run(inFilePath, stepListFile, check_existing_file):    
-    
-
-    print("**** RUN S4_get_behaviour_vector_from_list.py ****")
+    colGREEN = '\x1b[1;32m'
+    colRESET = '\x1b[0m'
+    print(f'{colGREEN}************************************************{colRESET}')
+    print(f'{colGREEN}**** S4 : get_behaviour_vector_from_list.py ****{colRESET}')
+    print(f'{colGREEN}************************************************{colRESET}')
     try:
         print(f"candidate step list : {stepListFile}")
         stepList=pd.read_csv(os.path.abspath(stepListFile))
@@ -120,5 +122,5 @@ if __name__=="__main__":
     whether you want to check if the behaviour files already exists and if so, NOT overwrite them''')
     args=parser.parse_args()
 
-    #run(args.inFilePath, args.stepListFile, args.check_existing_file)
+    run(args.inFilePath, args.stepListFile, args.check_existing_file)
 

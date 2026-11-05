@@ -44,7 +44,11 @@ Two files are generated : one from the simulated CRW and one for the observed tr
 
 if __name__=="__main__":
     with ProcessPoolExecutor(max_workers=16) as executor:
-        print("\n"+"######### **** compute Fractal on observed and simulated trajectory ********* ########")
+        colGREEN = '\x1b[1;32m'
+        colRESET = '\x1b[0m'
+        print(f'{colGREEN}**********************************************************************{colRESET}')
+        print(f'{colGREEN}**** S2 : compute Fractal on observed and simulated trajectory.py ****{colRESET}')
+        print(f'{colGREEN}**********************************************************************{colRESET}')
 
         workDir=sys.argv[2]
         fileName=os.path.splitext(os.path.basename(sys.argv[1]))[0]

@@ -26,7 +26,9 @@ if(!require(tidyverse)) {
   install.packages("tidyverse"); require(tidyverse)}
 if(!require(fs)) {
   install.packages("fs"); require(fs)}
-
+  if(!require(crayon)) {
+    install.packages("crayon"); require(crayon)}
+  
 })
 #############################
 
@@ -43,17 +45,24 @@ coordSplit<-function(x){
   return(list("coordX"=coordX, "coordY"=coordY))
 }
 
+#### PARAMETERS 
+cyan  <- cyan
+bold  <- bold
+cat(cyan("\n********************************************\n"))
+cat(cyan$bold("******     S1 : GENERATE_CRW.R     ********\n"))
+cat(cyan("********************************************\n\n"))
+
 cerf_path=commandArgs(trailingOnly = T)
 inFile=path_file(cerf_path[1])
 selectedDeer<-strsplit(inFile[1], split="_")[[1]][1]
 selectedYear<-path_ext_remove(paste(strsplit(inFile[1], split="_")[[1]][2],strsplit(inFile[1], split="_")[[1]][3], sep="_"))
-cat("***** SIMULATE CRW TRAJECTORY ****\n")
-cat("\n deer Name --> ",selectedDeer, ", deer Year --> ", selectedYear, "\n")
+
+cat("\n deer Name --> ",selectedDeer, "\n deer Year --> ", selectedYear, "\n")
 
 trajCerf<-readr::read_csv(cerf_path[1],show_col_types = FALSE)%>%
   mutate(coord_X=apply(as.data.frame(geometry), 1,function(x) coordSplit(x)$coordX ))%>%
   mutate(coord_Y=apply(as.data.frame(geometry), 1,function(x) coordSplit(x)$coordY ))%>%
-  mutate(dateTime=as.POSIXct(paste(UTC_DATE, UTC_TIME, sep=" "), origin="1970-01-01", tz="UTC"))%>%
+  mutate(dateTime=as.POSIXct(dateTime, origin="1970-01-01", tz="UTC"))%>%
   mutate(deerYear=factor(deerYear))%>%
   mutate(saison=factor(saison))%>%
   mutate(prenom=factor(prenom))%>%

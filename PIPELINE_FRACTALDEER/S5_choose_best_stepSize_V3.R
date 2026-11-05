@@ -28,6 +28,8 @@ require(ggplot2)
 require(FactoMineR)
 require(fs)
 require(tidyverse)
+require(crayon)
+  
 ##########################################
 if(!require(multidplyr)) {
   install.packages("multidplyr"); require(multidplyr)}
@@ -128,7 +130,7 @@ coordSplit<-function(x){
   datCerfs<-readr::read_csv(behaviourFile,show_col_types = FALSE)%>%
     mutate(coord_X=apply(as.data.frame(geometry), 1,function(x) coordSplit(x)$coordX ))%>%
     mutate(coord_Y=apply(as.data.frame(geometry), 1,function(x) coordSplit(x)$coordY ))%>%
-    mutate(dateTime=as.POSIXct(paste(UTC_DATE, UTC_TIME, sep=" "), origin="1970-01-01", tz="UTC"))%>%
+    mutate(dateTime=as.POSIXct(dateTime, origin="1970-01-01", tz="UTC"))%>%
     mutate(behaviour=factor(paste("b", behaviour, sep="_")))%>%
     mutate(deerYear=factor(deerYear))%>%
     mutate(prenom=factor(prenom))%>%
@@ -294,9 +296,12 @@ coordSplit<-function(x){
 
 ############ *** input parameters parsing ***** ################
 
-cat("\n********************************************\n")
-cat("\n****** S5 : CHOOSE_BEST_STEPSIZES.R ********\n")
-cat("\n********************************************\n")
+cyan  <- cyan
+bold  <- bold
+cat(cyan("\n********************************************\n"))
+cat(cyan$bold("****** S5 : CHOOSE_BEST_STEPSIZES.R ********\n"))
+cat(cyan("********************************************\n\n"))
+
 cerf_path<-commandArgs(trailingOnly = T)
 inFolder=cerf_path[1]
 tmpPath=unlist(strsplit(inFolder, "/"))

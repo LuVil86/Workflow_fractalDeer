@@ -2,7 +2,7 @@
 plotMigrateR<-function(behaviourFile=character(), outDir=character(),mutate.df=TRUE){
   
   repoSW ="https://stat.ethz.ch/CRAN/"
-#suppressPackageStartupMessages({
+suppressPackageStartupMessages({
 if(!require(MASS)) {
   install.packages("MASS",repos=repoSW, depedencies=TRUE); require(MASS)}
 if(!require(trajr)) {
@@ -16,9 +16,11 @@ if(!require(tidyverse)) {
   require(tidyverse)}
 if(!require(fs)) {
   install.packages("fs",repos=repoSW, depedencies=TRUE); require(fs)}
+  if(!require(crayon)) {
+    install.packages("crayon",repos=repoSW, depedencies=TRUE); require(crayon)}
 if(!require(adehabitatLT)) {
   install.packages("adehabitatLT",repos=repoSW, depedencies=TRUE); require(adehabitatLT)}
-#})
+})
   sourceDir <- function(path, trace = TRUE, ...) {
     op <- options(); on.exit(options(op)) # to reset after each 
     for (nm in list.files(path, pattern = "[.][RrSsQq]$")) {
@@ -43,6 +45,12 @@ if(!require(adehabitatLT)) {
   }
   
   
+  cyan  <- cyan
+  bold  <- bold
+  cat(cyan("\n********************************************\n"))
+  cat(cyan$bold("****** S0 : PLOT_MIGRATER.R ********\n"))
+  cat(cyan("********************************************\n\n"))
+  
   plotTitle<-strsplit(path_file(behaviourFile), split=".csv")[[1]][1]
   plotTitle<-gsub("_"," ",tail(strsplit(plotTitle, split="/")[[1]],n=1))
   #outDir=path_dir(behaviourFile)
@@ -54,7 +62,7 @@ if(!require(adehabitatLT)) {
     datCerfs<-readr::read_csv(behaviourFile)%>%
       mutate(coord_X=apply(as.data.frame(geometry), 1,function(x) coordSplit(x)$coordX ))%>%
       mutate(coord_Y=apply(as.data.frame(geometry), 1,function(x) coordSplit(x)$coordY ))%>%
-      mutate(dateTime=as.POSIXct(paste(UTC_DATE, UTC_TIME, sep=" "), origin="1970-01-01", tz="UTC"))%>%
+      mutate(dateTime=as.POSIXct(dateTime, origin="1970-01-01", tz="UTC"))%>%
       mutate(deerYear=factor(deerYear))%>%
       mutate(prenom=factor(prenom))%>%
       mutate(saison=factor(saison))%>%

@@ -47,7 +47,7 @@ if(mutate.df==TRUE){
 datCerfs<-readr::read_csv(behaviourFile, name_repair = "minimal")%>%
   mutate(coord_X=apply(as.data.frame(geometry), 1,function(x) coordSplit(x)$coordX ))%>%
   mutate(coord_Y=apply(as.data.frame(geometry), 1,function(x) coordSplit(x)$coordY ))%>%
-  mutate(dateTime=as.POSIXct(paste(UTC_DATE, UTC_TIME, sep=" "), origin="1970-01-01", tz="UTC"))%>%
+  mutate(dateTime=as.POSIXct(dateTime, origin="1970-01-01", tz="UTC"))%>%
   mutate(behaviour=factor(paste("b", behaviour, sep="_")))%>%
   mutate(deerYear=factor(deerYear))%>%
   mutate(prenom=factor(prenom))%>%
@@ -56,7 +56,7 @@ datCerfs<-readr::read_csv(behaviourFile, name_repair = "minimal")%>%
   dplyr::select(x="coord_X", y="coord_Y",t="dateTime", id="prenom",deerYear="deerYear", jourNuit="jourNuit",saison="saison","behaviour"=behaviour, "path_no"=path_no)
   suppressWarnings(datCerfs<-datCerfs%>%transform(saison = fct_relevel(saison, c("Mars-Mai","Juin-Aout","Septembre-Novembre","Decembre-Fevrier"))))
 }else{
-  datCerfs<-readr::read_csv(behaviourFile, id_repair = "unique")%>%    
+  datCerfs<-readr::read_csv(behaviourFile)%>%    
   mutate(path_no=factor(new_path_no))%>%
   mutate(behaviour=ifelse(behaviour=="mc_1","in-patch", "in-matrix"))%>%
   suppressWarnings(datCerfs<-datCerfs%>%transform(saison = fct_relevel(saison, c("Mars-Mai","Juin-Aout","Septembre-Novembre","Decembre-Fevrier"))))
